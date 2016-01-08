@@ -64,7 +64,10 @@
         "enabled": false,
         "alwaysVisible": false
       },
-      "es.upv.paella.TrimmingPlayerPlugin": {
+      "edu.harvard.dce.paella.trimmingPlayerPlugin": {
+        "enabled": true
+      },
+      "es.upv.paella.trimmingPlayerPlugin": {
         "enabled": false
       },
       "es.upv.paella.editor.TrimmingTrackPlugin": {
