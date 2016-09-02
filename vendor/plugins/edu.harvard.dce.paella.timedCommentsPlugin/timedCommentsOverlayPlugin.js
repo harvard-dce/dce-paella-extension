@@ -1,3 +1,40 @@
+/** WARNING this plugin is tied to the syntax provided by Opencast 1x Annoation Service.
+/* The annotation format assumes an embedded annoation value surrounded by
+/* Opencast annoation service metadata */
+/* Example of expect syntax:
+/*   {
+/*      "annotationId": 235367673,
+/*      "mediapackageId": "137c0efa-798b-494d-a2a8-e1d76d6421d7",
+/*      "sessionId": "q3rwk2r3z86m12dt7dv643mmc",
+/*      "inpoint": 4,
+/*      "outpoint": 410,
+/*      "length": 406,
+/*      "type": "paella/timedComments",
+/*      "isPrivate": false,
+/*      "value": {"timedComment": {
+/*               "value": "This is my comment text",
+/*               "parent": "235367659",
+/*               "userName": "student4",
+/*               "mode": "reply"
+/*      }},
+/*      "created": "2016-09-02T13:44:43-04:00"
+/* }
+/* NOTE: the value object, above, is destringified by the custom data delegate.
+/*
+/* versus a normalized syntax
+/* {
+/*    "annotationId": 235367673,
+/*    "created": "2016-09-02T13:44:43.364Z",
+/*    "value": "This is my comment text",
+/*    "parent": "235367659",
+/*    "userName": "student4",
+/*    "mode": "reply",
+/*    "inpoint": 4,
+/*    "outpoint": 410,
+/*    "isPrivate": false
+/* }
+/* 
+/* */
 Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
   containerId: 'paella_plugin_TimedCommentsOverlay',
   container: null,
