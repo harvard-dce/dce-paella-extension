@@ -510,7 +510,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
           newEl = $(thisClass.tc_reply);
         }
         newEl.attr('data-annot-id', l.annotationId);
-        var friendlyDateStrig = thisClass.getFriendlyDate(comment.created);
+        var friendlyDateStrig = thisClass.getFriendlyDate(l.created);
         $(newEl).find(".tc_comment_text").html(comment.value);
         $(newEl).find(".user_name").html(comment.userName);
         $(newEl).find(".user_comment_date").html(friendlyDateStrig);
