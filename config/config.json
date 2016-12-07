@@ -199,6 +199,9 @@
       "edu.harvard.dce.paella.infoPlugin": {
         "enabled": true
       },
+      "edu.harvard.dce.paella.topAlignMonoVideoPlugin": {
+         "enabled": true
+      },
       "edu.harvard.dce.paella.add2xPlaybackChoice": {
         "enabled": true
       },
