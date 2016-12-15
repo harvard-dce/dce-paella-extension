@@ -224,6 +224,9 @@
       "edu.harvard.dce.paella.iphonePluginDisablerPlugin": {
         "enabled": true,
         "actiondelay":200
+      },
+      "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
+        "enabled": true
       }
     }
   },
