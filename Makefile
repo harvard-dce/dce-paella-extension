@@ -1,5 +1,5 @@
 test:
-	node tests/heartbeat-sender-tests.js
+	node tests/dce-usertracking-tests.js
 	node tests/timedComments-TAPE-test.js
 
 pushall:
