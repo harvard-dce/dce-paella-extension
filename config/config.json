@@ -108,13 +108,8 @@
         "showMasterVolume": true,
         "showSlaveVolume": false
       },
-      "edu.harvard.dce.paella.heartbeatSender": {
-        "enabled": true,
-        "heartBeatTime": 30000
-      },
       "es.upv.paella.opencast.userTrackingSaverPlugIn": {
-        "enabled": true,
-         "//": "Using temp overwrite until https://github.com/polimediaupv/paella-matterhorn/issues/22"
+        "enabled": false
       },
       "es.upv.paella.repeatButtonPlugin": {
         "enabled": false,
@@ -227,6 +222,16 @@
       },
       "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
         "enabled": true
+      },
+      "edu.harvard.dce.paella.dceUsertrackingPlugin": {
+        "enabled": true,
+        "url": "/usertracking/",
+        "enabledUrl": "/usertracking/detailenabled",
+        "requestMethod": "get",
+        "heartbeatInterval": 3000,
+        "extraLogParams": {
+          "_method": "PUT"
+        }
       }
     }
   },

@@ -25,6 +25,32 @@ Usage
 
 You need to copy your stuff out of this module to where you need it yourself. Sorry. The DCE fork of paella-matterhorn does it in the `copy-extensions-to-paella` target of its [Makefile](https://github.com/harvard-dce/paella-matterhorn/blob/master/Makefile).
 
+DCE's usertracking plugin
+-------------------------
+This plugin extends paella's native `userTrackingSaverPlugIn` with the additional functionality to send timed interval `HEARTBEAT` events. It also extends the configuration to allow for different endpoint urls and extra logging params. Config options are as follows:
+
+    {
+        url: '/usertracking/',
+        enabledUrl: '/usertracking/detailenabled',
+        requestMethod: 'get',
+        heartbeatInterval: 30000,
+        extraLogParams: {
+            "_method": "PUT"
+        }
+    }
+    
+Useraction events will be logged to the endpoint identified by `url` using the http `requestMethod`. 
+
+The paella plugin manager will confirm that usertracking is enabled via a GET request to `enabledUrl`. The response should be some string value that evaluates to `true` in the context
+
+    JSON.parse(val.toLowerCase()) ? true : false
+    
+e.g., "true" or "1".
+
+Additional params to be logged with the event should be defined in `extraLogParams`. For example, the standard opencast endpoint only allows `GET` requests, but those must be accompanied by the additional param, `&_method=PUT`. 
+
+`heartbeatInterval` is defined in milliseconds.
+
 Development
 -----------
 
@@ -49,7 +75,7 @@ There is only one set of tests so far. To run it, assuming you have already run 
 
     make test
 
-You should see output that looks like this:
+You should see output that looks like something like this:
 
     TAP version 13
     # Heartbeat test
