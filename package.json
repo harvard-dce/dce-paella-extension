@@ -1,6 +1,6 @@
 {
   "name": "dce-paella-extensions",
-  "version": "1.6.13-tilttest.3",
+  "version": "1.6.13-tilttest.4",
   "description": "Harvard DCE Extensions for the Paella video player",
   "main": "index.js",
   "scripts": {
