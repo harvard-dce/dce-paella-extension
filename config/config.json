@@ -227,6 +227,9 @@
       },
       "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
         "enabled": true
+      },
+      "edu.harvard.edu.paella.tilt90DegressPlugin": {
+         "enabled": true
       }
     }
   },
