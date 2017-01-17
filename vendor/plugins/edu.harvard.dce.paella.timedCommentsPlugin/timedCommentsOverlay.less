@@ -15,11 +15,11 @@
   height: 40vh;
   overflow: hidden;
   opacity:1;
-  z-index:1000;
+  z-index:997;
   font-size: 14px;
 }
 
-#innerAnnotation{
+#innerAnnotation {
   overflow-y: auto;
   min-height: 0px;
   flex: 2 1 auto;
@@ -38,6 +38,28 @@
 #innerAnnotation form {
     display: "";
      margin: 0 0 5px;
+}
+
+input.tc_reply_textarea,
+input.tc_comment_textarea{
+  margin-bottom: 0px;
+  margin-top: 5px;
+  width: 100%;
+  height: 1.1em;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #efefef;
+}
+
+#dceAnnotUserContainer, #dceAnnotUserPseudoName {
+    color: #909090;
+    font-size: 10px;
+    font-style: oblique;
+    padding-right: 10px;
+    text-align: right;
+}
+
+#dceAnnotUserPseudoName {
+  curson: pointer;
 }
 
 #e28e0130-9824-11e5-88b4-a94245a618ad0:hover{
@@ -59,16 +81,6 @@
 #TimedCommentPlugin_Comments:hover{
   background-color: rgba(0, 0, 0, 0.7);
   cursor: move;
-}
-
-input.tc_reply_textarea,
-input.tc_comment_textarea{
-  margin-bottom: 0px;
-  margin-top: 5px;
-  width: 100%;
-  height: 1.1em;
-  background-color: rgba(0, 0, 0, 0.2);
-  color: #efefef;
 }
 
 .tc_timestamp_block{
@@ -209,7 +221,7 @@ label.tc_comment_isprivate {
 
 .comment-move-menu {
     display: none;
-    z-index: 1000;
+    z-index: 997;
     position: absolute;
     overflow: hidden;
     border: 1px solid #CCC;
@@ -227,4 +239,92 @@ label.tc_comment_isprivate {
 
 .comment-move-menu li:hover {
     background-color: #DEF;
+}
+
+/* ------------------------------------------- */
+/* MATT-2245 Social Tool alias input box style */
+
+#dialog-form-alias {
+  padding: 10px;
+  margin-top: 3px;
+  font-size: 0.9em;
+  z-index: 998;
+  position: relative;
+  overflow: auto;
+  display: inline;
+}
+
+#form-alias {
+  display: block;
+  position: relative;
+  margin: 0 10px 0;
+}
+
+#form-alias > .alias {
+  color: #121212;
+  font-size: 12px;
+  text-shadow: none;
+}
+
+#alias-input-info.alias {
+  margin: auto;
+  font-style: italic;
+  font-size: 10px;
+}
+
+.no-close .ui-dialog-titlebar-close {
+  display: none;
+}
+
+.ui-dialog-titlebar {
+    display: none;
+}
+
+.ui-widget.alias-prompt {
+    font-family: Verdana,Arial,sans-serif;
+    font-size: .8em;
+}
+
+.ui-widget-content.alias-prompt {
+    background: #f9f9f9 none repeat scroll 0 0;
+    border: 2px solid #eeeeef;
+    border-radius: 3px;
+    color: #222222;
+}
+
+#tc_alias_input {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  display:block;
+  padding: 2px;
+}
+
+#tc_alias_input.text { 
+  width: 95%; 
+  padding: .4em; 
+}
+
+/* extra style for jQuery dialog buttons */
+dialog-form-alias > div.ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix {
+   color: #121212;
+   background-color: #eeeeef;
+   display: block;
+}
+
+dialog-form-alias > button.ui-button {
+  line-height: 160%;
+  font-weight: bold;
+}
+
+dialog-form-alias > div.ui-dialog-buttonset {
+  padding: 3px;
+  text-align: right;
+}
+
+.ui-dialog-buttonset > button {
+  margin-right: 10px;
+  margin-left: 10px;
+  width: 80px;
+  font-size: 12px;
+  color: #121212;
 }

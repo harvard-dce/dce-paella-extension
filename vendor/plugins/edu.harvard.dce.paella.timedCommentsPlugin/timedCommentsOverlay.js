@@ -47,6 +47,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
   _shortMonths:[ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
   _curActiveTop: null,
   _curScrollTop: 0,
+  _isAdmin: false,
   _isActive: false,
   _isAutoScroll: false,
   _annotations: null, //will store the annotations
@@ -54,6 +55,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
   _prevProfile: null,//we store the profile we had before opening the annotation
   _optimalProfile: 'tiny_presentation',
   _userData: undefined,
+  _aliasUtil: null, // This instaitiates a paella.plugins.TimedCommentsUsernameAlias
   checkEnabled: function (onSuccess) {
     onSuccess(true);
   },
@@ -70,6 +72,11 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     paella.events.showTimedComments = "dce:showTimedComments";
     paella.events.hideTimedComments = "dce:hideTimedComments";
     return[paella.events.showTimedComments, paella.events.hideTimedComments, paella.events.refreshTimedComments, paella.events.play, paella.events.timeupdate, paella.events.pause, paella.events.endVideo];
+  },
+
+  setup: function() {
+     // custom helper util for username alias create and change
+     this._aliasUtil = new paella.TimedCommentsUsernameAlias();
   },
   
   onEvent: function (eventType, params) {
@@ -123,21 +130,32 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     thisClass.lastEvent = eventType;
   },
   
+  // This gets the user access roles from Opencast user service
+  // Required to determin if user is logged in as admin.
   getUserData: function () {
     var self = this;
     var defer = new $.Deferred();
-    if (self._userData) {
-      defer.resolve(self._userData);
-    } else {
-      paella.opencast.getUserInfo().then(
-      function (me) {
-        self._userData = me;
+    // always refresh userdata
+    paella.opencast.getUserInfo().then(
+    function (me) {
+      self._userData = me;
+      // If not loggged in as admin, do the pseudo name check
+      if ($.inArray('ROLE_ADMIN', me.roles) === -1) {
+        self._aliasUtil.getPseudoName().then(function (pseudoName) {
+          // replacing OC username with annot pseudo name and
+          // also setting flag that its an annot pseudoname
+          self._userData.username = pseudoName;
+          self._userData.pseudoName = pseudoName;
+          defer.resolve(self._userData);
+        });
+      } else {
+        self._isAdmin = true;
         defer.resolve(self._userData);
-      },
-      function () {
-        defer.reject();
-      });
-    }
+      }
+    },
+    function () {
+      defer.reject();
+    });
     return defer;
   },
   
@@ -181,10 +199,12 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     thisClass.sortAnnotations();
     
     paella.player.videoContainer.currentTime().then(function (time) {
-      thisClass.getUserData().then(function(userData) {
+      thisClass.getUserData().then(function (userData) {
         thisClass.drawTimedComments(time, userData);
       }).then(function () {
         $("#innerAnnotation").animate({scrollTop: thisClass._curScrollTop}, 100);
+        // create the alias input DOM element
+        thisClass._aliasUtil.initAliasDialogElement(thisClass);
         // changing the layout profile that is most optimal to show comments
         thisClass.changeToOptimalVideoProfile(thisClass._optimalProfile);
         thisClass._isActive = true;
@@ -326,7 +346,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     
     // movable & resizable comments box
     $('#TimedCommentPlugin_Comments').draggable({
-      cancel: "#innerAnnotation, .tc_new_comment"
+      cancel: "#dceAnnotUserPseudoName, #innerAnnotation, .tc_new_comment"
     });
     $('#TimedCommentPlugin_Comments').resizable({
       minWidth: 200,
@@ -352,28 +372,29 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     }
     
     // Halt comment refreshes when typing a comment or repy
-    $('.tc_reply_textarea, .tc_comment_textarea, .tc_admin_edit').focusin(function() {
+    $('.tc_reply_textarea, .tc_comment_textarea, .tc_admin_edit, #tc_alias_input').focusin(function () {
       thisClass._isActive = false;
       // stop all typing leaks to underlying player
       paella.keyManager.enabled = false;
-    }).focusout(function() {
+    }).focusout(function () {
       thisClass._isActive = true;
       // re-enable typing leaks to underlying player
       paella.keyManager.enabled = true;
     });
     // stop keypress from leaking through to underlying div (video play/pause)
     $('.tc_reply_textarea, .tc_comment_textarea').keydown(function (event) {
-      var charCode = (typeof event.which == "number") ? event.which : event.keyCode;
+      var charCode = (typeof event.which == "number") ? event.which: event.keyCode;
       switch (charCode) {
         // spacebar event
         case 32:
         event.preventDefault();
+        event.stopImmediatePropagation();
         $(this).val($(this).val() + " ");
         return false;
         // enter key event
         case 13:
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         thisClass.onTextAreaSubmit(this);
         return false;
       }
@@ -381,8 +402,8 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     });
     
     // prevent space bar event trickle pause/play & use enter for submit (short comments)
-    $('.tc_reply_textarea, .tc_comment_textarea').keyup(function (event) {
-      var charCode = (typeof event.which == "number") ? event.which : event.keyCode;
+    $('.tc_reply_textarea, .tc_comment_textarea, #tc_alias_input, #dceAnnotUserPseudoName').keyup(function (event) {
+      var charCode = (typeof event.which == "number") ? event.which: event.keyCode;
       switch (event.keyCode) {
         // spacebar event, prevent click through
         case 32:
@@ -392,7 +413,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
         // enter key event
         case 13:
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         return false;
       }
     });
@@ -410,6 +431,9 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
         thisClass._isAutoScroll = true;
       }
     });
+    if(!thisClass._isAdmin) {
+      thisClass._aliasUtil.addWelcomePseudoNameHeader(userData.username);
+    }
     return defer.resolve();
   },
   
@@ -490,7 +514,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
           newEl = $(thisClass.tc_reply);
         }
         newEl.attr('data-annot-id', l.annotationId);
-        var friendlyDateStrig = thisClass.getFriendlyDate(comment.created);
+        var friendlyDateStrig = thisClass.getFriendlyDate(l.created);
         $(newEl).find(".tc_comment_text").html(comment.value);
         $(newEl).find(".user_name").html(comment.userName);
         $(newEl).find(".user_comment_date").html(friendlyDateStrig);
@@ -508,19 +532,36 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
   
   onTextAreaSubmit: function (textareaDiv) {
     var thisClass = this;
+    $(textareaDiv).addClass("submit-text-div");
     var txtValue = $(textareaDiv).val();
     var txtType = $(textareaDiv).attr('data-type');
     if (txtType === "update") {
-      txtValue = $(textareaDiv).text();
       thisClass.updateAnnot(textareaDiv);
     } else if (txtValue.replace(/\s/g, '') !== "") {
-      // only allow new comment if not empty text
-      if (txtType === "reply") {
-        thisClass.addReply(textareaDiv);
-      } else {
-        thisClass.addComment();
-      }
+      // only allow unempty text
+      thisClass.getUserData().then(function (userData) {
+        if (! userData.pseudoName) {
+          // The update action will call the submitSwitch
+          thisClass._isActive = false;
+          paella.keyManager.enabled = false;
+          thisClass._aliasUtil.updatePseudoName();
+        } else {
+          thisClass.submitSwitch();
+        }
+      });
     }
+  },
+  
+  submitSwitch: function () {
+    var textareaDiv =  $(".submit-text-div");
+    var thisClass = this;
+    var txtType = $(textareaDiv).attr('data-type');
+    if (txtType === "reply") {
+      thisClass.addReply(textareaDiv);
+    } else {
+      thisClass.addComment();
+    }
+    $(textareaDiv).removeClass("submit-text-div");
   },
   
   updateAnnot: function (textareaDiv) {
@@ -630,9 +671,10 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     thisClass._curScrollTop = $("#innerAnnotation").scrollTop();
     var txtValue = paella.AntiXSS.htmlEscape(thisClass.publishCommentTextArea.val());
     var isPrivate = thisClass.publishCommentisPrivate.val() === true ? true: false;
-
-    thisClass.getUserData().then( function(user){
-      var newComment = {};
+    
+    thisClass.getUserData().then(function (user) {
+      var newComment = {
+      };
       newComment.userName = user.username;
       newComment.mode = "comment";
       newComment.value = txtValue;
@@ -643,14 +685,14 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
       paella.player.videoContainer.currentTime().then(function (time) {
         thisClass.writeComment(data, time, isPrivate);
       });
-    }, 
+    },
     // else log issue
     base.log.debug("TC, unable to retrieve user information, cannot write comment"));
   },
   
-  writeComment: function(data, inPoint, isPrivate) {
+  writeComment: function (data, inPoint, isPrivate) {
     var thisClass = this;
-  	paella.player.videoContainer.currentTime().then(function (time) {
+    paella.player.videoContainer.currentTime().then(function (time) {
       paella.data.write('timedComments', {
         id: paella.initDelegate.getId(),
         inpoint: Math.floor(inPoint),
@@ -676,8 +718,9 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     var inPoint = commentBlock.attr("data-inpoint");
     
     // create the new reply
-    thisClass.getUserData().then( function(user){
-      var newComment = {};
+    thisClass.getUserData().then(function (user) {
+      var newComment = {
+      };
       newComment.userName = user.username;
       newComment.mode = "reply";
       newComment.value = txtValue;
@@ -687,7 +730,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
         timedComment: newComment
       };
       thisClass.writeComment(data, inPoint, isPrivate);
-    }, 
+    },
     // else log issue
     base.log.debug("TC, unable to retrieve user information, cannot write comment"));
   },
@@ -697,6 +740,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     $(thisClass.container).hide();
   },
   
+  //"created": "2017-01-26T14:32:52-05:00"
   getFriendlyDate: function (dateString) {
     var result;
     var date = new Date(dateString);
@@ -706,14 +750,14 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     };
     // check Safari (v9 & v10) and mobile browser date format support
     if (typeof Intl == 'object' && typeof Intl.DateTimeFormat == 'function') {
-      result = new Intl.DateTimeFormat("en-US", options).format(date);
+      result = new Intl.DateTimeFormat("en-US", options).format(date) + " US ET";
     } else {
       // browsers that don't support Intl.DateTimeFormat
       var day = date.getDate();
       var monthIndex = date.getMonth();
       var hour = ('00' + date.getHours()).slice(-2);
       var minute = ('00' + date.getMinutes()).slice(-2);
-      result = this._shortMonths[monthIndex] + " " + day + ", " + hour + ":" + minute + "US ET";
+      result = this._shortMonths[monthIndex] + " " + day + ", " + hour + ":" + minute + " US ET";
     }
     return result;
   },

@@ -1,17 +1,49 @@
 // Same as MHAnnotationServiceDefaultDataDelegate except returns the root level annotation data
 paella.dataDelegates.TimedCommentsDataDelegate = Class.create(paella.DataDelegate, {
 
-  // stub to get the user's annotation name
-  getMyName: function (context, params, onSuccess) {
-    var series = params.series;
+  // #DCE MATT-2245 Get the user's annotation name
+  getMyPseudoName: function (context, params, onSuccess) {
+    var mpId = params.id;
     base.ajax.get({
-      url: '/annotation/myname', params: {
-        series: seriesId,
-        type: "paella/" + context
+      url: '/annotation/property', params: {
+        mediaPackageId: mpId,
+        type: "paella/" + context,
+        propertyName: "userName"
       }
+    },
+    function (data, contentType, returnCode) {
+      // 200: returns user name, 204: if no user name
+      if (returnCode == '204') {
+        data = null;
+      }
+      onSuccess(data, true);
+    },
+    function (data, contentType, returnCode) {
+      onSuccess(data, false);
     });
   },
 
+  // #DCE MATT-2245 Update or Set the user's annotation name
+  setMyPseudoName: function (context, params, onSuccess) {
+    var mpId = params.id;
+    var userName = params.newPseudoName;
+    base.ajax.post({
+      url: '/annotation/property',  params: {
+        mediaPackageId: mpId,
+        propertyValue: userName,
+        type: "paella/" + context,
+        propertyName: "userName"
+      }
+    },
+    function (data, contentType, returnCode) {
+      onSuccess(data, returnCode, true);
+    },
+    function (data, contentType, returnCode) {
+      onSuccess(data, returnCode, false);
+    });
+  },
+
+  // This is the "READ" entry point for this Data Delegate
   read: function (context, params, onSuccess) {
     var thisClass = this;
     var question = params.question;
@@ -19,17 +51,23 @@ paella.dataDelegates.TimedCommentsDataDelegate = Class.create(paella.DataDelegat
     var ifModifiedSince = params.ifModifiedSince;
     if (question === 'canAnnotate') {
       thisClass.isCanAnnotate(context, episodeId, onSuccess);
+    } else if (question === 'getMyPseudoName') {
+      thisClass.getMyPseudoName(context, params, onSuccess);
     } else {
       thisClass.getAnnotations(context, episodeId, ifModifiedSince, onSuccess);
     }
   },
 
+  // This is the "WRITE" entry point for this Data Delegate
   // #DCE note: This saves annotations as public in a digest format with question/answer.
   // Write creates a new note
   write: function (context, params, value, onSuccess) {
     var thisClass = this;
     if (params.update) {
       thisClass.updateExistingAnnot(context, params, value, onSuccess);
+    } else if (params.newPseudoName) {
+       // MATT-2245 set or change user's annot pseudo name
+       thisClass.setMyPseudoName(context, params, onSuccess);
     } else {
       thisClass.createNewAnnot(context, params, value, onSuccess);
     }
@@ -69,7 +107,7 @@ paella.dataDelegates.TimedCommentsDataDelegate = Class.create(paella.DataDelegat
       var annotations = data.annotations.annotation;
       var total = data.annotations.total;
       if (!(annotations instanceof Array)) {
-        annotations =[annotations];
+        annotations = [annotations];
       }
       if (total > 0) {
         try {
@@ -203,4 +241,5 @@ paella.dataDelegates.TimedCommentsDataDelegate = Class.create(paella.DataDelegat
       }
     });
   }
+ 
 });
