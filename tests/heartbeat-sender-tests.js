@@ -54,13 +54,6 @@ test('Livestream heartbeat test', function liveStreamTest(t) {
   setUpMocks();
   setUpAssertingMocks(t);
 
-  // For a live stream, paella.player.paused() will always return true, even if
-  // it is playing (which it always is).
-  paella.player.isLiveStream = function mockIsLiveStream() {
-    return true;
-  };
-  paella.player.videoContainer.paused = mockPausedIsTrue;
-
   reload(modulePath);
 });
 
@@ -159,7 +152,7 @@ function setUpAssertingMocks(t) {
 
     t.equal(
       query.playing,
-      'true',
+      'live',
       'The playing query param should be set to the string "true".'
     );
   }
@@ -180,6 +173,12 @@ function setUpMocks(opts) {
   };
 
   global.paella = _.cloneDeep(mockPaellaObject);
+
+  // For a live stream, paella.player.paused() will always return true, even if
+  // it is playing (which it always is).
+  global.paella.player.isLiveStream = mockIsLiveStream;
+  global.paella.player.videoContainer.paused = mockPausedIsTrue;
+
 
   global.base = {};
 
@@ -218,6 +217,10 @@ function mockPaused() {
 }
 
 function mockPausedIsTrue() {
+  return true;
+}
+
+function mockIsLiveStream() {
   return true;
 }
 

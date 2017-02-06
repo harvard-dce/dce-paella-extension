@@ -1,6 +1,6 @@
 {
   "name": "dce-paella-extensions",
-  "version": "1.6.16",
+  "version": "1.6.17",
   "description": "Harvard DCE Extensions for the Paella video player",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   "author": "Harvard DCE",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jimkang/dce-paella-extensions/issues"
+    "url": "https://github.com/harvard-dce/dce-paella-extensions/issues"
   },
   "homepage": "https://github.com/harvard-dce/dce-paella-extensions",
   "devDependencies": {

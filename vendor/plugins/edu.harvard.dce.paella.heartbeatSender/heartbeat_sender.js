@@ -40,8 +40,7 @@ Class(
         // However, our live stream player does not allow pausing. If you are
         // watching live stream, you are playing. So, we can count on that to
         // determine play state.
-        var isPlaying = !videoData.paused ||
-          paella.player.isLiveStream();
+        var isPlaying = paella.player.isLiveStream() ? "live" : (!videoData.paused).toString();
 
         var url = '/usertracking/?';
         url += queryStringFromDict({
