@@ -28,6 +28,8 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 	getDefaultToolTip:function() { return base.dictionary.translate("Captions"); },
 	getIndex:function() {return 664;},
 
+	closeOnMouseOut:function() { return true; },
+
 	checkEnabled:function(onSuccess) {
 		// iphone uses it's own player and does not show caption overlay (but iPad does)
 		if(paella.captions.getAvailableLangs().length > 0 && !(navigator.userAgent.match(/(iPhone)/g))){
@@ -38,7 +40,7 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 	},
 
 	showUI: function(){
-		if(paella.captions.getAvailableLangs().length){
+		if(paella.captions.getAvailableLangs().length >= 1){
 			this.parent();
 		}
 	},
@@ -46,9 +48,15 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 	setup:function() {
 		var self = this;
 
-		self._activeCaptions = paella.captions.getActiveCaptions();
+		// HIDE UI IF NO Captions
+		if(paella.captions.getAvailableLangs().length < 1){
+			paella.plugins.captionsPlugin.hideUI();
+		}
 
-		self._searchOnCaptions = self.config.searchOnCaptions || false;
+		// MATT-2219 prevent activating the CC video overlay
+		if (!self._hasTranscriptText) {
+			paella.events.trigger(paella.events.captionsDisabled);
+		}
 
 		// MATT-2219 #DCE Assume no caption text if first language has no caption text
 		var id = paella.captions.getAvailableLangs()[0].id;
@@ -84,6 +92,9 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 			self.cancelHideBar();
 		});
 
+		self._activeCaptions = paella.captions.getActiveCaptions();
+
+		self._searchOnCaptions = self.config.searchOnCaptions || false;
 	},
 
 	cancelHideBar:function(){
@@ -125,7 +136,7 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 		var resul = null;
 
 		if(paella.captions.getActiveCaptions()){
-			n = paella.captions.getActiveCaptions()._captions;
+			var n = paella.captions.getActiveCaptions()._captions;
 			n.forEach(function(l){
 				if(l.begin < time.currentTime && time.currentTime < l.end) thisClass.resul = l.id;
 			});
@@ -217,10 +228,6 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
 				paella.keyManager.enabled = true;
 				self._open = 0;
 				break;
-		}
-		// MATT-2219 prevent activating the CC video overlay
-		if (!self._hasTranscriptText) {
-			paella.events.trigger(paella.events.captionsDisabled);
 		}
 
 	},
@@ -360,7 +367,7 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
     },
 
     doSearch:function(text){
-    	thisClass = this;
+		var thisClass = this;
 		var c = paella.captions.getActiveCaptions();
 		if(c){
 			if(text==""){thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions,"list");}
@@ -375,8 +382,8 @@ Class ("paella.plugins.DceCaptionsPlugin", paella.ButtonPlugin,{
     },
 
     setButtonHideShow:function(){
-    	var thisClass = this;
-    	var editor = $('.editorButton');
+		var thisClass = this;
+		var editor = $('.editorButton');
 		var c = paella.captions.getActiveCaptions();
 		var res = null;
 	   	if(c!=null){

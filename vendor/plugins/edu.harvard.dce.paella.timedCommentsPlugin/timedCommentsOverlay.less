@@ -1,4 +1,4 @@
-/* Style for timed Comments */
+/** Style for timed Comments */
 .timedComments{
   display: flex;
   flex-direction: column;
@@ -26,18 +26,9 @@
   cursor: auto;
 }
 
-#innerAnnotation * {
-  -webkit-touch-callout: text;
-  -webkit-user-select: text;
-  -khtml-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
-
 #innerAnnotation form {
-    display: "";
-     margin: 0 0 5px;
+    display: inherit;
+    margin: 0 0 5px;
 }
 
 input.tc_reply_textarea,
@@ -71,8 +62,6 @@ input.tc_comment_textarea{
 #e28e0130-9824-11e5-88b4-a94245a618bnd a:visited{
   color: rgba(255, 255, 150, 0.80);
 }
-
-/* karen */
 
 .form-group > div{
   display: inline;
@@ -152,6 +141,7 @@ label.tc_comment_isprivate {
   display: inline;
 }
 
+
 .tc_reply:before {
     content: "»";
     margin-right: 6px;
@@ -180,7 +170,6 @@ label.tc_comment_isprivate {
   display: inline-block;
 }
 
-
 @media all and (min-width: 100px) {
   .tc_comment_text, .tc_reply_text {
     flex: 2 0 210px;
@@ -192,32 +181,6 @@ label.tc_comment_isprivate {
     white-space: nowrap;
   }
 }
-
-/* Safari can't handle this
-@media all and (max-width : 600px){
-
-  .tc_comment_text {
-    flex: 2 0 0;
-  }
-
-  .tc_comment_data {
-    flex: 1 0 0;
-    margin-left: auto;
-    padding-right: 10px;
-  }
-
-  .tc_timestamp{
-    flex: 0 1 6px;
-    padding-left: 5px;
-  }
-
-  .tc_timestamp_block{
-    flex-direction: column;
-  }
-}
-*/
-
-/* ref: http://jsfiddle.net/u2kJq/241/ */
 
 .comment-move-menu {
     display: none;

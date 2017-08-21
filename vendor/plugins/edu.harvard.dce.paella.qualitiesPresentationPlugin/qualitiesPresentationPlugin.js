@@ -12,7 +12,6 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
   // to filter out presentations without a matching file str match
   // the default value can be changed by the config file.
   _presenterHasAudioTag: 'multiaudio',
-  _isCurrentlySingleStream: false,
   presentationOnlyLabel: 'Go_to_Presentation_Only',
   singleStreamLabel: 'SINGLESTREAM',
   bothVideosLabel: 'Go_to_Both_Videos',
@@ -40,20 +39,10 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
     return base.dictionary.translate("Change video quality");
   },
 
-  getEvents: function () {
-    // Inserting a new event types (used by DCE presentationOnlyPlugin)
-    paella.events.donePresenterOnlyToggle = "dce:donePresenterOnlyToggle";
-    return[paella.events.donePresenterOnlyToggle];
-  },
-
-  onEvent: function (eventType, params) {
-    this.turnOnVisibility();
-  },
-
   checkEnabled: function (onSuccess) {
     var This = this;
     paella.player.videoContainer.getQualities().then(function (q) {
-      onSuccess(q.length > 1);
+      onSuccess((This.availableSlaves.length > 0) || (q.length > 1));
     });
   },
 
@@ -61,16 +50,28 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
     var This = this;
     This.initData();
     This.setQualityLabel();
+    // Inserting a new event type (triggered by DCE presentationOnlyPlugin)
+    paella.events.donePresenterOnlyToggle = "dce:donePresenterOnlyToggle";
+    // Inserting a new event type (triggered by DCE singleVideoPlugin)
+    paella.events.doneSingleVideoToggle = "dce:doneSingleVideoToggle";
     //config
     This.showWidthRes = (This.config.showWidthRes !== undefined) ? This.config.showWidthRes: true;
-    paella.events.bind(paella.events.qualityChanged, function (event) { This.setQualityLabel(); });
+    paella.events.bind(paella.events.qualityChanged, function (event) {
+      This.setQualityLabel();
+    });
+    paella.events.bind(paella.events.donePresenterOnlyToggle, function (event) {
+      This.turnOnVisibility();
+    });
+    paella.events.bind(paella.events.doneSingleVideoToggle, function (event) {
+      This.rebuildContent();
+    });
   },
 
   initData: function () {
     var key, j;
     var container = paella.player.videoContainer.getNode("playerContainer_videoContainer_container");
-    this.currentMaster = container.getNode("playerContainer_videoContainer_1");
-    this.currentSlave = container.getNode("playerContainer_videoContainer_2");
+    this.currentMaster = paella.player.videoContainer.masterVideo();
+    this.currentSlave = paella.player.videoContainer.slaveVideo();
 
     var minVerticalRes = parseInt(this.config.minVerticalRes);
     var maxVerticalRes = parseInt(this.config.maxVerticalRes);
@@ -82,10 +83,9 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
     var allMasterSources = paella.player.videoContainer.sourceData[0].sources;
 
     for (key in allMasterSources) {
-      // This assumes the video container has a streamname attribute (i.e. 'rtmp', 'mp4', etc)
-      // Note: this does not differentiate between "rtmp" stream sub-types of video/x-flv, video/mp4, etc.
-      // Note: this only separates stream sources, such as "rtmp", "mp4", etc.
-      // This may need to be revisited to filter out stream source types of "hls", "mpd", etc.
+      // This assumes the video container has a stream name attribute (i.e.'rtmp', 'mp4', etc).
+      // Note: this does not differentiate on sub-types of "rtmp" stream (i.e. video/x-flv, video/mp4).
+      // The strategy may need to be revisited in the future to filter out stream source types of "hls", "mpd", etc.
       if (key === this.currentMaster._streamName) {
         for (j = 0; j < allMasterSources[key].length;++ j) {
           if ((isNaN(minVerticalRes) == false) && (parseInt(allMasterSources[key][j].res.h) < minVerticalRes)) {
@@ -269,27 +269,36 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
     return elem;
   },
 
-  onItemClick: function (data) {
+ onItemClick: function(data) {
     var self = this;
     paella.player.controls.hidePopUp(self.getName());
-
-    if (typeof paella.plugins.presentationOnlyPlugin !== "undefined") {
-      // disapear the button until the new res is loaded, toggleResolutions turns it on directly when it's safe to use again
-      self.turnOffVisibility();
-      paella.plugins.presentationOnlyPlugin.toggleResolution(data, self.turnOnVisibility);
-      self._isCurrentlySingleStream = paella.plugins.presentationOnlyPlugin.isCurrentlySingleStream;
-    } else {
-      paella.player.videoContainer.setQuality(data.index).then(function () {
-        self.setQualityLabel();
-      });
-    }
+    paella.player.videoContainer.masterVideo().getVideoData().then(function(videoData) {
+      if (typeof paella.plugins.presentationOnlyPlugin !== "undefined") {
+        paella.plugins.presentationOnlyPlugin.checkEnabled(function(isEnabled) {
+          if (isEnabled) {
+            self.turnOffVisibility();
+            paella.plugins.presentationOnlyPlugin.toggleResolution(data);
+          } else {
+            paella.pluginManager.doResize = false;
+            self._addMasterReloadListener(videoData);
+            paella.player.videoContainer.setQuality(data.index).then(function() {
+              self.setQualityLabel();
+              paella.pluginManager.doResize = true;
+            });
+          }
+        });
+      } else {
+        paella.player.videoContainer.setQuality(data.index).then(function() {
+          self.setQualityLabel();
+        });
+      }
+    });
 
     var arr = self._domElement.children;
     for (var i = 0; i < arr.length; i++) {
       arr[i].className = self.getButtonItemClass(i, false);
     }
   },
-
   // paella5 style
   setQualityLabel: function () {
     var This = this;
@@ -334,6 +343,25 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
       return true;
     }
     return false;
+  },
+
+  // Unfreeze the frozen quality res changed videos with a seek event
+  _addMasterReloadListener: function(state) {
+    base.log.debug("PO: about to bind master reload 'emptied' event");
+    var video1node = paella.player.videoContainer.masterVideo();
+    $(video1node.video).bind('emptied', function(evt) {
+      base.log.debug("PO: on event 'emptied', doing seekToTime to unfreeze master ");
+      paella.player.videoContainer.seekToTime(state.currentTime);
+      $(this).unbind('emptied');
+    });
+    // needed for Safari
+    $(video1node.video).bind('canplay canplaythrough', function(evt) {
+      if (!paella.pluginManager.doResize) {
+        base.log.debug("PO: on event " + evt.type + ", doing seekToTime to unfreeze master");
+        paella.player.videoContainer.seekToTime(state.currentTime);
+      }
+      $(this).unbind('canplay canplaythrough');
+    });
   }
 });
 

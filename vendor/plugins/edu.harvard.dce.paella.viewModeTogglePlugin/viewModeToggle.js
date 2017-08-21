@@ -28,11 +28,7 @@ Class ("paella.plugins.ViewModeTogglePlugin",paella.ButtonPlugin,{
     if( this._playerIsFullscreen() ) {
       if (! this._currentlyUsingFullscreenProfile() && ! this._hasAutoSwitched ) {
         this._hasAutoSwitched = true;
-        paella.events.trigger(
-          paella.events.setProfile,{
-            profileName: this._fullScreenSpecificProfiles()[0]
-          }
-        );
+        paella.player.setProfile(this._fullScreenSpecificProfiles()[0]);
       }
     }
   },
@@ -58,16 +54,15 @@ Class ("paella.plugins.ViewModeTogglePlugin",paella.ButtonPlugin,{
     }
 
     base.log.debug("Now triggering event setProfile on " + chosenProfile);
-    overlayContainer = paella.player.videoContainer.overlayContainer;
-    overlayContainer.clear();
-    paella.events.trigger(
-      paella.events.setProfile,{
-        profileName: chosenProfile
-      }
-    );
+    var overlayContainer = paella.player.videoContainer.overlayContainer;
+    if (overlayContainer) {
+      overlayContainer.clear();
+    }
+    paella.player.setProfile(chosenProfile, false);
+
   },
   checkEnabled:function(onSuccess) {
-    onSuccess(paella.player.videoContainer.slaveVideo() !== undefined);
+    onSuccess(!paella.player.videoContainer.isMonostream);
   },
 
   // called by Mutli-Single view (presentationOnlyPlugin)

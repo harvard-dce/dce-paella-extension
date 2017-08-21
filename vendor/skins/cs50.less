@@ -1,4 +1,5 @@
 /* Light icons over dark background */
+
 @fontFamily: Verdana, sans-serif;
 
 @linkColor: #636363;
@@ -9,9 +10,15 @@
 
 @mainColor: #e4e4e4;
 
+@playbackBarBackground: linear-gradient(to bottom, #ff0000 0%,#690000 100%);
+
+@playbackBarBackgroundInactive: #333333;
+
 @hoverBackgroundColor: #555;
 
 @backgroundColor: #222;
+
+@pageBackgroundColor: #4b4b4b;
 
 @shadowColor: #e4e4e4;
 
@@ -27,9 +34,11 @@
 
 @popup_text_color: white;
 
-@playbackBarButtonHeightPx: 30;
+@playbackBarButtonHeightPx: 40;
 
-@playbackBarButtonWidthPx: 30;
+@playbackBarButtonWidthPx: 40;
+
+@playbackBarButtonPadding: 5px;
 
 @playbackControlHeightPx: 12;
 
@@ -71,7 +80,7 @@ img#playerContainer_videoContainer_bkg{
   display: none;
 }
 
-.timeControl {
+div.timeControl {
   color: #555;
 }
 
@@ -107,10 +116,12 @@ div#playerContainer_controls_playback_playbackBar_full{
   background: linear-gradient(to bottom, #333 0%,#333 50%, #2b2b2b 50%, #2b2b2b 100%); /* W3C */
 }
 
-.showPlaybackRateButton, .showMultipleQualitiesPlugin {
+.buttonPlugin.showPlaybackRateButton, .buttonPlugin.showMultipleQualitiesPlugin {
   color: white;
   background-image: none;
+}
 
+.buttonPluginPopUp.showPlaybackRateButton, .buttonPluginPopUp.showMultipleQualitiesPlugin {
   .multipleQualityItem, .playbackRateItem {
     padding: 0em .25em 0em;
     font-size: 1em;
@@ -183,3 +194,11 @@ div.buttonPlugin.left {
 }
 
 /* #DCE end, CSS overrides to flexify the playback bar */
+
+/* #DCE override for zoom videoWraper flex */
+/* ref https://github.com/polimediaupv/paella/issues/294 */
+.freezeFrame {
+    align-self:center;
+    position: absolute;
+}
+

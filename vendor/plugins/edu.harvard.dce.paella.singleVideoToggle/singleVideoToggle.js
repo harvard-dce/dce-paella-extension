@@ -1,11 +1,9 @@
+// SingleVideoTogglePlugin purpose: reduce bandwidth on mobile by toggling between presentation & presenter video.
 Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
   
   _isMaster: true,
   _slaveData: null,
   _mastereData: null,
-  _seekToThisTime: null,
-  _isSeekToTime: false,
-  
   getDefaultToolTip: function () {
     return base.dictionary.translate("Switch videos");
   },
@@ -22,6 +20,8 @@ Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
     return "edu.harvard.dce.paella.singleVideoTogglePlugin";
   },
   setup: function () {
+    // new event thrown by this plugin
+    paella.events.doneSingleVideoToggle = "dce:doneSingleVideoToggle";
     // The sources are > 1 to get to this point
     this._masterData = paella.dce.sources[0];
     this._slaveData = paella.dce.sources[1];
@@ -33,57 +33,59 @@ Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
   checkEnabled: function (onSuccess) {
     onSuccess(base.userAgent.system.iOS && paella.dce && paella.dce.sources && paella.dce.sources.length > 1);
   },
-  
   action: function (button) {
     if (this._isMaster) {
       this._isMaster = false;
-      this._toggleVideoSource(this._slaveData);
+      this._toggleSources(this._slaveData);
     } else {
       this._isMaster = true;
-      this._toggleVideoSource(this._masterData);
+      this._toggleSources(this._masterData);
     }
   },
-  _toggleVideoSource: function (sourceData) {
-    var thisClass = this;
-    var source = null;
-    source =[sourceData];
-    // update to use paella 5 promise on current time query
-    paella.player.videoContainer.currentTime().then(function (time) {
-      thisClass._doSourceToggle(source);
-    });
-  },
-  
-  _doSourceToggle: function (source) {
+  _toggleSources: function(source) {
     var self = this;
-    paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {
-      self._setSeekToTime(videoData.currentTime);
-      // Remove the existing video node
-      self._removeVideoNodes();
-      // Swap source type (presenter/master/0 & presentation/slave/1)
-      var updatedSource = source[0];
-      // augments attributes (e.g. type = "video/mp4")
-      paella.player.videoLoader.loadStream(updatedSource);
-      source[0] = updatedSource;
-      paella.player.videoContainer.setStreamData(source).then(function () {
-        // reload the video for iOS
-        $("#playerContainer_videoContainer_1").load();
-        self._toggleSeekToTime();
-        paella.player.videoContainer.setVolume(videoData.volume).then(function () {
+    // use current quality for toggled source
+    paella.dce.currentQuality = paella.player.videoContainer.masterVideo()._currentQuality;
+    paella.player.videoContainer.masterVideo().getVideoData().then(function(videoData) {
+      // pause videos to temporarily stop update timers
+      paella.player.videoContainer.pause().then(function () {
+        paella.pluginManager.doResize = false;
+        // save current volume to player config to be used during video recreate
+        if (paella.player.config.player.audio) {
+          paella.player.config.player.audio.master = videoData.volume;
+        }
+        // Remove the existing video node
+        self._removeVideoNodes();
+        // Need to augment attributes (e.g. add type = "video/mp4")
+        paella.player.videoLoader.loadStream(source);
+        var sources = [source];
+        paella.player.videoContainer.setStreamData(sources).then(function () {
+          paella.player.videoContainer.seekToTime(videoData.currentTime);
+          // #DCE Un-pause the plugin manager's timer from looking to master video duration
+          // "paella.pluginManager.doResize" is a custom #DCE param,
+          //  see DCE opencast-paella vendor override: src/05_plugin_base.js
+          paella.pluginManager.doResize = true;
           self._addListenerBackOntoIosVideo();
-          // completely swapping out sources requires res selection update
-          self._rebuildResolutions();
+          paella.player.videoContainer.setVolume({
+            'master': videoData.volume,
+            'slave': 0
+          }).then(function() {
+             base.log.debug("SVT: after set volume to " +  videoData.volume);
+             //start 'em up if needed
+             if (! videoData.paused) {
+               paella.player.paused().then(function (stillPaused) {
+                 if (stillPaused) {
+                   paella.player.play();
+                 }
+               });
+             }
+             // completely swapping out sources requires res selection update
+             paella.events.trigger(paella.events.doneSingleVideoToggle);
+          });
         });
-      }).fail(function (error) {
-        self._failConsoleLog("PO: WARN - error during source reset" + error);
       });
     });
   },
-  _rebuildResolutions: function () {
-    if (paella.plugins.singleMultipleQualitiesPlugin) {
-      paella.plugins.singleMultipleQualitiesPlugin.rebuildContent();
-    }
-  },
-
   _addListenerBackOntoIosVideo: function () {
     // re-enable click on screen
     paella.player.videoContainer.firstClick = false;
@@ -102,39 +104,30 @@ Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
 
   // in Paella5, need to manually remove nodes before reseting video source data
   _removeVideoNodes: function () {
-    var video1node = paella.player.videoContainer.container.getNode(paella.player.videoContainer.video1Id);
-    var video2node = paella.player.videoContainer.container.getNode(paella.player.videoContainer.video2Id);
+    var video1node = paella.player.videoContainer.masterVideo();
+    var video2node = paella.player.videoContainer.slaveVideo();
     // ensure swf object is removed
     if (typeof swfobject !== "undefined") {
       swfobject.removeSWF("playerContainer_videoContainer_1Movie");
     }
-    paella.player.videoContainer.container.removeNode(video1node);
-    if (video2node) {
-      paella.player.videoContainer.container.removeNode(video2node);
+    paella.player.videoContainer.videoWrappers[0].removeNode(video1node);
+    if (video2node && paella.player.videoContainer.videoWrappers.length > 1) {
+      paella.player.videoContainer.videoWrappers[1].removeNode(video2node);
     }
-    // remove factory counts for Html5 videos
-    if (paella.videoFactories.Html5VideoFactory) {
-      paella.videoFactories.Html5VideoFactory.s_instances = 0;
+    // empty the set of video wrappers
+    paella.player.videoContainer.videoWrappers =[];
+    // remove video container wrapper nodes
+    var masterWrapper = paella.player.videoContainer.container.getNode("masterVideoWrapper");
+    paella.player.videoContainer.container.removeNode(masterWrapper);
+    var slaveWrapper = paella.player.videoContainer.container.getNode("slaveVideoWrapper");
+    if (slaveWrapper) {
+      paella.player.videoContainer.container.removeNode(slaveWrapper);
     }
+    // clear existing stream provider data
+    paella.player.videoContainer._streamProvider.constructor();
+    // trigger videoUnloaded event for volumecontrol save action and buffer indicator
+    paella.events.trigger(paella.events.videoUnloaded);
     base.log.debug("PO: removed video1 and video2 nodes");
-  },
-  _failConsoleLog: function (msg) {
-    console.log(msg);
-  },
-  _toggleSeekToTime: function () {
-    var self = this;
-    var player = document.getElementsByTagName("video")[0];
-    player.addEventListener('canplay', function (event) {
-      if (self._isSeekToTime) {
-        self._isSeekToTime = false;
-        paella.player.videoContainer.seekToTime(self._seekToThisTime);
-      }
-    },
-    false);
-  },
-  _setSeekToTime: function (time) {
-    this._seekToThisTime = time;
-    this._isSeekToTime = true;
   }
 });
 

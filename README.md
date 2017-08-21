@@ -43,7 +43,7 @@ To avoid having to run `npm publish` and `npm install` just to see if a change w
 
 - Run `npm link` (with sudo if your global node_modules is in a place that requires it) from this repo's directory.
 - Run `npm link dce-paella-extensions` in the paella-matterhorn directory. Now there will be a symlink-like link to the project.
-- Then, run `grunt build` in paella-matterhorn.
+- Then, run `gulp default` in paella-matterhorn.
 
 Tests
 -----

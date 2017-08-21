@@ -451,6 +451,8 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     var newEl;
     var commentBlock;
     var previousParentId;
+    // hold current time stamp element
+    var timeStampBlockEl;
     
     // Just so that we don't repeat code...
     function addReplyBox () {

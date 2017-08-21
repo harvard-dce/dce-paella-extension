@@ -282,16 +282,16 @@ Class ("paella.plugins.timedCommentsHeatmapPlugin", paella.ButtonPlugin, {
 
   // without the milliseconds
   makeISODateString: function(d) {
-    function pad(n) {
+    function pad(n) {
       return (n < 10 ? '0' + n : n);
     }
-    return d.getUTCFullYear()+'-'
-         + pad(d.getUTCMonth()+1)+'-'
-         + pad(d.getUTCDate())+'T'
-         + pad(d.getUTCHours())+':'
-         + pad(d.getUTCMinutes())+':'
-         + pad(d.getUTCSeconds())+'Z';
-  },
+    return d.getUTCFullYear()+'-'
+      + pad(d.getUTCMonth()+1)+'-'
+      + pad(d.getUTCDate())+'T'
+      + pad(d.getUTCHours())+':'
+      + pad(d.getUTCMinutes())+':'
+      + pad(d.getUTCSeconds())+'Z';
+   },
 
   makeHeatmapData: function (timedComments) {
     var This = this;
