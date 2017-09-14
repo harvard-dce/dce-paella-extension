@@ -17,7 +17,11 @@ Class ('paella.plugins.InfoPlugin', paella.ButtonPlugin,{
     var thisClass = this;
 
     var popUp = jQuery('<div id="dce-info-popup"></div>');
-    var buttonActions =[ 'About player', 'Report a problem', 'System status', 'Privacy policy', 'Feedback', thisClass._classHandoutKey, 'All Course Videos'];
+    var buttonActions =[ 'About player', 'Report a problem', 'System status', 'Privacy policy', thisClass._classHandoutKey, 'All Course Videos'];
+    // #DCE MATT-2438, remove the 'All Course Videos' when the player is directly embedded
+    if (paella.player.getPlayerMode() === paella.PaellaPlayer.mode.embed) {
+      buttonActions =[ 'About player', 'Report a problem', 'System status', 'Privacy policy', thisClass._classHandoutKey];
+    }
 
     popUp.append(thisClass.getItemTitle());
     buttonActions.forEach(function(item){
@@ -72,17 +76,6 @@ Class ('paella.plugins.InfoPlugin', paella.ButtonPlugin,{
         break;
       case ('System status'):
         window.open('http://status.dce.harvard.edu');
-        break;
-      case ('Feedback'):
-        var params = 'ref=' + this.getVideoUrl() + '&server=MH';
-        if (paella.opencast && paella.opencast._episode) {
-          params += paella.opencast._episode.dcIsPartOf ? '&offeringId=' + paella.opencast._episode.dcIsPartOf : '';
-          params += paella.opencast._episode.dcType ? '&typeNum=' + paella.opencast._episode.dcType : '';
-          params += paella.opencast._episode.dcContributor ? '&ps=' + paella.opencast._episode.dcContributor : '';
-          params += paella.opencast._episode.dcCreated ? '&cDate=' + paella.opencast._episode.dcCreated : '';
-          params += paella.opencast._episode.dcSpatial ? '&cAgent=' + paella.opencast._episode.dcSpatial : '';
-        }
-        window.open('https://cm.dce.harvard.edu/forms/feedback.shtml?' + params);
         break;
       case ('All Course Videos'):
         if (paella.opencast && paella.opencast._episode && paella.opencast._episode.dcIsPartOf){
