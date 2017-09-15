@@ -33,6 +33,9 @@ Development
 - Edit the files you want.
 - Run tests as documented in the next section.
 - When you are ready to publish to NPM, make sure you update the version in package.json.
+- Also tag with the same version (i.e. if npm version is 1.6.8, make a git tag -a v1.6.8) and push to the repo.
+-- This allows the dce-paella-matterhorn to use npm or the git repo directly.
+-- For example, via "dce-paella-extensions": "1.6.8" or "dce-paella-extensions": "harvard-dce/dce-paella-extensions#v1.6.18"
 
 **Testing a development version of this module in paella-matterhorn**
 
