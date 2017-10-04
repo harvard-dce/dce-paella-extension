@@ -3,7 +3,7 @@
   "player": {
     "defaultProfile": "full",
     "profileFrameStrategy": "paella.ProfileFrameStrategy",
-    "videoQualityStrategy": "paella.BestFitVideoQualityStrategy",
+    "videoQualityStrategy": "paella.RequestedOrBestFitVideoQualityStrategy",
     "methods": [
         { "factory":"MpegDashVideoFactory", "enabled":true },
         { "factory":"Html5VideoFactory", "enabled":true },
