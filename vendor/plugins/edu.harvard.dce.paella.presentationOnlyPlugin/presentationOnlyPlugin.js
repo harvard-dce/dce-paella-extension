@@ -106,7 +106,7 @@ Class ("paella.plugins.PresentationOnlyPlugin", paella.EventDrivenPlugin, {
       if (paella.player.config.defaultProfile) {
         base.log.debug("PO: saved profile is " + this._currentProfile + ", but changing to " + paella.player.config.defaultProfile);
         this._currentProfile = paella.player.config.defaultProfile;
-        paella.player.setProfile(this._currentProfile, false);
+        paella.player.setProfile(this._currentProfile);
       } else {
         base.log.debug("PO: Cannot change to multivideo profile because cannot find paella.player.config.defaultProfile");
       }

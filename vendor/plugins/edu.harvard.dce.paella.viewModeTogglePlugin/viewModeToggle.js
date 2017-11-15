@@ -58,7 +58,7 @@ Class ("paella.plugins.ViewModeTogglePlugin",paella.ButtonPlugin,{
     if (overlayContainer) {
       overlayContainer.clear();
     }
-    paella.player.setProfile(chosenProfile, false);
+    paella.player.setProfile(chosenProfile);
 
   },
   checkEnabled:function(onSuccess) {
