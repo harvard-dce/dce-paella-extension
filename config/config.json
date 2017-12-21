@@ -188,6 +188,9 @@
         "minZoom": 100,
         "zoomIncr": 10
       },
+      "es.upv.paella.videoZoomPlugin": { "enabled":false},
+      "es.upv.paella.audioLanguage": { "enabled":false },
+      "es.upv.paella.videoZoomToolbarPlugin": { "enabled":false, "targetStreamIndex":0 },
       "es.upv.paella.fullScreenButtonPlugin": {
         "enabled": true,
         "reloadOnFullscreen": {
