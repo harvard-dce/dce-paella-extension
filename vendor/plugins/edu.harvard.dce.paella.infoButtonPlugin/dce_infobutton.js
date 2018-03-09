@@ -45,6 +45,7 @@ Class ('paella.plugins.InfoPlugin', paella.ButtonPlugin,{
     var thisClass = this;
     var elem = jQuery('<div />');
     elem.attr({'class': 'infoItemButton'}).text(buttonAction);
+    elem.attr({'id': 'info-' + buttonAction.replace(/\s+/g, '-').toLowerCase()}).text(buttonAction);
     elem.click(function (event) {
       thisClass.onItemClick(buttonAction);
     });
