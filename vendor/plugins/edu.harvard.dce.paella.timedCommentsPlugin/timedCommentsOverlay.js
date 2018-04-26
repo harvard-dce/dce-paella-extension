@@ -47,6 +47,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
   _shortMonths:[ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
   _curActiveTop: null,
   _curScrollTop: 0,
+  _adminRoles: ["ROLE_ADMIN"],  // default, configurable via config plugin attribute "adminRoles"
   _isAdmin: false,
   _isActive: false,
   _isAutoScroll: false,
@@ -73,10 +74,15 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     paella.events.hideTimedComments = "dce:hideTimedComments";
     return[paella.events.showTimedComments, paella.events.hideTimedComments, paella.events.refreshTimedComments, paella.events.play, paella.events.timeupdate, paella.events.pause, paella.events.endVideo];
   },
-
+  init: function() {
+    this._adminRoles = config.adminRoles;
+  },
   setup: function() {
      // custom helper util for username alias create and change
      this._aliasUtil = new paella.TimedCommentsUsernameAlias();
+     if (this.config.adminRoles) {
+       this._adminRoles = this.config.adminRoles;
+     }
   },
   
   onEvent: function (eventType, params) {
@@ -140,7 +146,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     function (me) {
       self._userData = me;
       // If not loggged in as admin, do the pseudo name check
-      if ($.inArray('ROLE_ADMIN', me.roles) === -1) {
+      if (!self.hasAdminRole(me.roles)) {
         self._aliasUtil.getPseudoName().then(function (pseudoName) {
           // replacing OC username with annot pseudo name and
           // also setting flag that its an annot pseudoname
@@ -354,7 +360,7 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     });
     
     // Admins have a special view
-    if ($.inArray('ROLE_ADMIN', userData.roles) !== -1) {
+    if (thisClass.hasAdminRole(userData.roles)) {
       // Disable input if user is logged in as admin
       $(".timedComments").find('input').attr('disabled', 'disabled').attr('placeholder', 'You must log out of Engage server to annotate');
       // Enable edit of existing comments
@@ -769,6 +775,15 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     parser = new DOMParser();
     return parser.parseFromString(template, "text/html");
     // returns a HTMLDocument, which also is a Document.
+  },
+  hasAdminRole: function(userRoles) {
+    var isAdmin = false;
+    this._adminRoles.forEach(function(role) {
+      if ($.inArray(role, userRoles) !== -1) {
+        isAdmin = true;
+      }
+    });
+    return isAdmin;
   },
   // TODO: move these to template files
   tc_comment: '<div class="tc_comment"><div class="tc_comment_text"></div><div class="tc_comment_data"><div class="user_icon"></div><div class="user_name"></div>, <div class="user_comment_date"></div></div></div>',

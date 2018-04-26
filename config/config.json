@@ -170,7 +170,11 @@
         "enabled": true
       },
       "edu.harvard.dce.paella.timedCommentsOverlayPlugin": {
-        "enabled": true
+        "enabled": true,
+        "adminRoles": [
+           "ROLE_ADMIN",
+           "ROLE_DCE_OC_SOCIAL_ADMIN"
+         ]
       },
       "es.upv.paella.playbackRatePlugin": {
         "enabled": true
