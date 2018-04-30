@@ -777,13 +777,15 @@ Class ("paella.plugins.TimedCommentsOverlay", paella.EventDrivenPlugin, {
     // returns a HTMLDocument, which also is a Document.
   },
   hasAdminRole: function(userRoles) {
-    var isAdmin = false;
-    this._adminRoles.forEach(function(role) {
-      if ($.inArray(role, userRoles) !== -1) {
-        isAdmin = true;
-      }
+    if (userRoles == null || !Array.isArray(this._adminRoles)) return false;
+    // Protect if Opencast sends a single value instead of an array (as it does in mp json)
+    if (!Array.isArray(userRoles)) {
+      userRoles = [userRoles];
+    }
+    return this._adminRoles.some(function(role) {
+      // Break and return true if one admin role is part of userRoles array
+      return ($.inArray(role, userRoles) !== -1);
     });
-    return isAdmin;
   },
   // TODO: move these to template files
   tc_comment: '<div class="tc_comment"><div class="tc_comment_text"></div><div class="tc_comment_data"><div class="user_icon"></div><div class="user_name"></div>, <div class="user_comment_date"></div></div></div>',
