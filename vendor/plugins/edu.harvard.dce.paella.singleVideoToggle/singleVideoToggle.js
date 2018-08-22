@@ -44,7 +44,8 @@ Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
   },
   _toggleSources: function(source) {
     var self = this;
-    // use current quality for toggled source
+    var currentPlaybackRate =  paella.player.videoContainer.masterVideo()._playbackRate;
+    // use current quality for toggled source in DCE requestedOrBestFitVideoQualityStrategy during reload
     paella.dce.currentQuality = paella.player.videoContainer.masterVideo()._currentQuality;
     paella.player.videoContainer.masterVideo().getVideoData().then(function(videoData) {
       // pause videos to temporarily stop update timers
@@ -71,7 +72,13 @@ Class ("paella.plugins.SingleVideoTogglePlugin", paella.ButtonPlugin, {
             'slave': 0
           }).then(function() {
              base.log.debug("SVT: after set volume to " +  videoData.volume);
-             //start 'em up if needed
+             // Reset playback rate if the playback button exists and playback rate is not the default of 1.
+             // A button onClick event is needed to correctly set the playback plugin UI
+             var playbackRateButton = $('#' + self.currentPlaybackRate.toString().replace(".", "\\.") + 'x_button');
+             if (self.currentPlaybackRate != 1 && $(playbackRateButton).length) {
+               $(playbackRateButton).click();
+             }
+             //if it was playing, play the video
              if (! videoData.paused) {
                paella.player.paused().then(function (stillPaused) {
                  if (stillPaused) {

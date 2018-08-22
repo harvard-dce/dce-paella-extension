@@ -16,6 +16,7 @@ Class ("paella.plugins.PresentationOnlyPlugin", paella.EventDrivenPlugin, {
   _presentationOnlyProfile: 'monostream',
   _currentQuality: '',
   _currentProfile: '',
+  _currentPlaybackRate: 1,
   _lastMultiProfile: null,
   _currentState:[],
   _isEnabled: false,
@@ -143,6 +144,7 @@ Class ("paella.plugins.PresentationOnlyPlugin", paella.EventDrivenPlugin, {
   
   _saveCurrentState: function (data, index) {
     this._currentState = data;
+    this._currentPlaybackRate = paella.player.videoContainer.masterVideo()._playbackRate;
     // currentQuality used by DCE requestedOrBestFitVideoQualityStrategy during reload
     paella.dce.currentQuality = index;
     // save current volume to player config to be used during video recreate
@@ -152,6 +154,7 @@ Class ("paella.plugins.PresentationOnlyPlugin", paella.EventDrivenPlugin, {
   },
   
   _restoreState: function (videoData) {
+    var self = this;
     paella.player.videoContainer.seekToTime(videoData.currentTime);
     // #DCE, Un-pause the plugin manager's timer from looking to master video duration
     // "paella.pluginManager.doResize" is a custom #DCE param,
@@ -162,6 +165,11 @@ Class ("paella.plugins.PresentationOnlyPlugin", paella.EventDrivenPlugin, {
       'slave': 0
     }).then(function () {
       base.log.debug("PO: after set volume to " + videoData.volume);
+      // Reset playback rate via playback button (ensure correct UI) if playback rate is not the default of 1.
+      var playbackRateButton = $('#' + self._currentPlaybackRate.toString().replace(".", "\\.") + 'x_button');
+      if (self.currentPlaybackRate != 1 && $(playbackRateButton).length) {
+        $(playbackRateButton).click();
+      }
       //start 'em up if needed
       if (! videoData.paused) {
         paella.player.paused().then(function (stillPaused) {
