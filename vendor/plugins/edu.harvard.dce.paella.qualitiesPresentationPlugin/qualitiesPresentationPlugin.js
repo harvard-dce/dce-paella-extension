@@ -298,6 +298,7 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
     for (var i = 0; i < arr.length; i++) {
       arr[i].className = self.getButtonItemClass(i, false);
     }
+    this._setResCookie(data.index);
   },
   // paella5 style
   setQualityLabel: function () {
@@ -362,7 +363,20 @@ Class ("paella.plugins.SingleMultipleQualitiesPlugin", paella.ButtonPlugin, {
       }
       $(this).unbind('canplay canplaythrough');
     });
+  },
+
+  _setResCookie: function(index) {
+    var resCookie;
+    if (index == this.availableMasters.length -1 ){
+      resCookie = 'high';
+    } else  if (index == 0) {
+      resCookie = 'low';
+    } else {
+      resCookie = 'medium';
+    }
+    base.cookies.set("lastResolution", resCookie);
   }
+
 });
 
 paella.plugins.singleMultipleQualitiesPlugin = new paella.plugins.SingleMultipleQualitiesPlugin();
