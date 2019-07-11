@@ -71,8 +71,9 @@ Class ('paella.plugins.InfoPlugin', paella.ButtonPlugin,{
           paramsP += paella.opencast._episode.dcContributor ? '&ps=' + paella.opencast._episode.dcContributor : '';
           paramsP += paella.opencast._episode.dcCreated ? '&cDate=' + paella.opencast._episode.dcCreated : '';
           paramsP += paella.opencast._episode.dcSpatial ? '&cAgent=' + paella.opencast._episode.dcSpatial : '';
+          paramsP += paella.opencast._episode.id ? '&id=' + paella.opencast._episode.id : '';
         }
-        window.open('https://cm.dce.harvard.edu/forms/report.shtml?' + paramsP);
+        window.open('../ui/index.html#/rap?' + paramsP);
         break;
       case ('System status'):
         window.open('http://status.dce.harvard.edu');
