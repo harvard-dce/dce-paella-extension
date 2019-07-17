@@ -179,6 +179,9 @@
       "es.upv.paella.playbackRatePlugin": {
         "enabled": true
       },
+      "edu.harvard.dce.paella.showInfoOverlay": {
+        "enabled": true
+      },
       "es.upv.paella.helpPlugin": {
         "enabled": false,
         "langs": [
