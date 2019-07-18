@@ -1,10 +1,9 @@
 var test = require('tape');
 var _ = require('lodash');
-var callNextTick = require('call-next-tick');
 var url = require('url');
 var reload = require('require-reload')(require);
-
 var Promise = require('bluebird');
+
 var mockCurrentTimePromise = function() {
   return Promise.resolve(300);
 }
@@ -17,7 +16,11 @@ var mockConfig = {
 };
 
 var mockPaellaObject = {
-  EventDrivenPlugin: '',
+  addPlugin: mockAddPlugin,
+  EventDrivenPlugin: class {
+    constructor(){}
+  },
+  super: function(){},
   plugins: {},
   player: {
     videoIdentifier: 'the-video-identifier',
@@ -41,7 +44,8 @@ test('Heartbeat tests', function heartbeatTests(t) {
   setUpAssertingMocks(t);
 
   // Loading the plugin code actually executes the plugin.
-  // That is how Paella plugins work.
+  // That was how Paella plugins worked before Paella 6.1.2.
+  // After Paella 6.1.2,  plugins are control loaded by the plugin manager
   require(modulePath);
 
 });
@@ -62,9 +66,13 @@ test('Livestream heartbeat test', function liveStreamTest(t) {
 
 function setUpAssertingMocks(t) {
   global.base.Timer = timer;
+  global.base.log = {
+     debug: function(){}
+  }
   global.XMLHttpRequest = createMockXHR();
 
   function timer(callback, time, params) {
+
     t.equal(
       typeof callback,
       'function',
@@ -76,8 +84,8 @@ function setUpAssertingMocks(t) {
       'Sets the timer to run at the interval specified in the config.'
     );
 
-    callNextTick(callback, global.base.Timer);
-    callNextTick(checkRepeatValue);
+    process.nextTick(callback, global.base.Timer);
+    process.nextTick(checkRepeatValue);
 
     var instance = this;
 
@@ -158,14 +166,6 @@ function setUpAssertingMocks(t) {
   }
 }
 
-// opts is not a required parameter. But if you do specify it, here's an example
-// of what is expected:
-// {
-//  classMethods: {
-//    nameOfMethodYouWantAttachedToEveryInstance: function myFn() { ... },
-//    otherMethod: function myOtherFn() { ... }
-//  }
-// }
 function setUpMocks(opts) {
 
   global.location = {
@@ -179,29 +179,30 @@ function setUpMocks(opts) {
   global.paella.player.isLiveStream = mockIsLiveStream;
   global.paella.player.videoContainer.paused = mockPausedIsTrue;
 
-
   global.base = {};
 
-  global.Class = function Class(classPath, classType, classDef) {
-    var classSegments = classPath.split('.');
-    if (classSegments.length === 3) {
-      global.paella.plugins[classSegments[2]] = createClass;
-    }
+  global.class = function (classDef) {
 
     function createClass() {
       var classInst = _.cloneDeep(classDef);
       classInst.config = _.cloneDeep(mockConfig);
-      classInst.setup();
 
       if (opts && opts.classMethods) {
         for (methodName in opts.classMethods) {
           classInst[methodName] = opts.classMethods[methodName];
         }
       }
-
+      classInst.onEvent('myEvent');
       return classInst;
-    }
+    };
+    global.paella.plugins['test'] = createClass();
   };
+}
+
+function mockAddPlugin(pluginClass) {
+  let PluginClass = pluginClass();
+  let pluginClassInstance = new PluginClass();
+  global.class(pluginClassInstance);
 }
 
 function mockCurrentTime() {
@@ -242,4 +243,5 @@ function tearDownGlobals() {
   delete global.base;
   delete global.Class;
   delete global.XMLHttpRequest;
+  delete global.EventDrivenPlugin;
 }

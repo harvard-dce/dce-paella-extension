@@ -1,51 +1,26 @@
-Class ("paella.plugins.ResizeLiveStream",paella.EventDrivenPlugin,{
-  getName: function() {
-    return "edu.harvard.dce.paella.resizeLiveStream";
-  },
-
-  getEvents: function() {
-    return [paella.events.resize];
-  },
-
-  resizeStreamingContainer: function(videoData) {
-   var optimalWidth;
-    var optimalHeight;
-    var videoContainer = $('#playerContainer_videoContainer_container');
-
-    var containerWidth = videoContainer.width();
-    var containerHeight = videoContainer.height();
-
-    var streamRes = videoData.res;
-
-    var newMaxWidth = (streamRes.w * containerHeight) / streamRes.h;
-    var newMaxHeight = (containerWidth * streamRes.h) / streamRes.w;
-
-    if(newMaxWidth > containerWidth) {
-      optimalWidth = containerWidth;
-      optimalHeight = newMaxHeight;
-    } else {
-      optimalWidth = newMaxWidth;
-      optimalHeight = containerHeight;
+// #DCE OPC-374 trigger a player resize at setComposition when video is live.
+// For RTMP, paella.player.onresize is never called to fix the view dimension.
+paella.addPlugin(function () {
+  return class HeartbeatSender extends paella.EventDrivenPlugin {
+    getName() {
+      return "edu.harvard.dce.paella.resizeLiveStream";
     }
-    var marginOffset = (containerHeight - optimalHeight) / 2;
-
-    // Paella5 rtmp object tag identifier
-    $('#playerContainer_videoContainer_1Movie').attr({
-      height: optimalHeight,
-      width: optimalWidth
-    }).css({marginTop: marginOffset + 'px'});
-  },
-
-  onEvent: function(event, params){
-    var self = this;
-    paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {
-      self.resizeStreamingContainer(videoData);
-    });
-  },
-
-  checkEnabled:function(onSuccess) {
-    onSuccess( paella.player.isLiveStream());
+    checkEnabled(onSuccess) {
+      if (paella.player.isLiveStream()) {
+        onSuccess(true);
+      } else {
+        onSuccess(false);
+      }
+    }
+    getEvents() {
+      return[paella.events.setComposition];
+    }
+    onEvent(eventType, params) {
+      let timer = new paella.Timer(function (timer) {
+        paella.player.onresize();
+      },
+      1000);
+      timer.repeat = false;
+    }
   }
 });
-
-paella.plugins.resizeLiveStream = new paella.plugins.ResizeLiveStream();

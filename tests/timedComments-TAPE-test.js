@@ -27,10 +27,8 @@ test('Timed Comments tests', function modulesLoadTest(t) {
     setUpMocks();
     // add the module
     require(modulePathOverlay);
-    //require(modulePathFootprint);
-    //require(modulePathDataDelegate);
     // verify it loaded with defalts
-    t.equal(paella.plugins.timedCommentsOverlay._curScrollTop, 0, "module loaded with default config");
+    t.equal(getTestClass()._curScrollTop, 0, "module loaded with default config");
 });
 
 test('Timed Comments sort', function annotationsSortTest(t) {
@@ -43,16 +41,16 @@ test('Timed Comments sort', function annotationsSortTest(t) {
     // use the sample json file
     var annotsResult = jsonfile.readFileSync(sampleAnnotFile);
     var annotations = parseSampleAnnotations(annotsResult.annotations);
-    paella.plugins.timedCommentsOverlay._annotations = annotations;
+    getTestClass()._annotations = annotations;
     var mismatch = null;
-    paella.plugins.timedCommentsOverlay._annotations.forEach(function(annot, index) {
+    getTestClass()._annotations.forEach(function(annot, index) {
       if (annot.annotationId !== beforeSortedOrder[index]) {
           mismatch = index + ". " + beforeSortedOrder[index] + " should not be " +  annot.annotationId;
       }
     });
     t.equal(mismatch, null, "order before sorting annotations");
-    paella.plugins.timedCommentsOverlay.sortAnnotations();
-    paella.plugins.timedCommentsOverlay._annotations.forEach(function(annot, index) {
+    getTestClass().sortAnnotations();
+    getTestClass()._annotations.forEach(function(annot, index) {
       if (annot.annotationId !== afterSortedOrder[index]) {
           mismatch = index + ". " + afterSortedOrder[index] + " should not be " +  annot.annotationId;
       }
@@ -61,9 +59,12 @@ test('Timed Comments sort', function annotationsSortTest(t) {
 });
 
 var mockPaellaObject = {
-    EventDrivenPlugin: '',
-    plugins: {
+    addPlugin: mockAddPlugin,
+    EventDrivenPlugin: class {
+     constructor(){}
     },
+    super: function(){},
+    plugins: {},
     player: {
         videoIdentifier: 'the-video-identifier',
         videoContainer: {
@@ -88,30 +89,28 @@ var mockConfig = {};
 
 // Mocks up the class of the plugin to test
 function setUpMocks(opts) {
-    global.paella = _.cloneDeep(mockPaellaObject);
-    global.base = {
-    };
-    
-    global. Class = function Class (classPath, classType, classDef) {
-        var classSegments = classPath.split('.');
-        if (classSegments.length === 3) {
-            global.paella.plugins[classSegments[2]] = createClass;
+  global.paella = _.cloneDeep(mockPaellaObject);
+  global.base = {};
+
+  global.class = function (classDef) {
+    function createClass() {
+      var classInst = _.cloneDeep(classDef);
+      classInst.config = _.cloneDeep(mockConfig);
+
+      if (opts && opts.classMethods) {
+        for (methodName in opts.classMethods) {
+          classInst[methodName] = opts.classMethods[methodName];
         }
-        
-        function createClass() {
-            var classInst = _.cloneDeep(classDef);
-            classInst.config = _.cloneDeep(mockConfig);
-            //classInst.setup(); <-- no used in timedcomments
-            
-            if (opts && opts.classMethods) {
-                for (methodName in opts.classMethods) {
-                    classInst[methodName] = opts.classMethods[methodName];
-                }
-            }
-            
-            return classInst;
-        }
+      }
+      return classInst;
     };
+    global.paella.plugins['test'] = createClass();
+  };
+
+}
+
+function getTestClass() {
+  return global.paella.plugins['test'];
 }
 
 // JSONify the annotations sample data (as is done in the data delegate)
@@ -135,6 +134,12 @@ function parseSampleAnnotations(data) {
         return rObj;
     });
     return annotations;
+}
+
+function mockAddPlugin(pluginClass) {
+  let PluginClass = pluginClass();
+  let pluginClassInstance = new PluginClass();
+  global.class(pluginClassInstance);
 }
 
 function mockCurrentTime() {

@@ -24,6 +24,8 @@
 
 @paella_icons_image: url(../images/paella_icons_light_dce.png);
 
+@paella_icons_color: white;
+
 @paella_icons_bkg_size: 2000% 1000%;
 
 @backgroundImage: none;
@@ -37,6 +39,12 @@
 @playbackBarButtonHeightPx: 40;
 
 @playbackBarButtonWidthPx: 40;
+
+@paellaIconsFontSizePx: 18px;
+
+@paellaIconsPaddingLeftPx: 5px;
+
+@paellaIconsLineHeightPx: 30px;
 
 @playbackBarButtonPadding: 5px;
 
@@ -93,7 +101,7 @@ div#playerContainer_controls_playback_playbackBar {
     background-image: linear-gradient(to bottom, #1f1f1f, #313131);
     border-radius: 5px;
     flex: 0 1 100%;
-    margin: 8px 8px 0 0;
+    margin: 14px 8px 0 0;
     order: 2;
 }
 
@@ -168,6 +176,7 @@ div#playerContainer_controls_playback_playbackBar_full{
   color: #666;
 }
 
+/* TODO: in Paella v6.2 plugins are button if they have an arial label (i.e. volume) so this flex will need adjustment */
 /* #DCE start, CSS overrides to flexify the playback bar */
 /* Adding "div" to increase specificity to override the UPV Paella CSS */
 /* purpose: Flex column enable the player bar (i.e. playback bar more stretchy when less buttons are enabled) */
@@ -181,24 +190,72 @@ div.playbackBarPlugins {
     display: flex;
 }
 
+span.buttonPlugin.right,
+button.buttonPlugin.right,
 div.buttonPlugin.right {
     float:none;
     flex: 0 0 auto;
     order: 3;
 }
 
+span.buttonPlugin.left,
+button.buttonPlugin.left,
 div.buttonPlugin.left {
     float:none;
     flex: 0 0 auto;
     order: 1;
 }
+/* #DCE end of CSS overrides to flexify the playback bar */
 
-/* #DCE end, CSS overrides to flexify the playback bar */
-
-/* #DCE override for zoom videoWraper flex */
-/* ref https://github.com/polimediaupv/paella/issues/294 */
-.freezeFrame {
-    align-self:center;
-    position: absolute;
+/* For res/auto display, playback rate, etc */
+i.button-icon.icon-screen {
+  font-size: 21.96px;
+  padding-left: 0px;
+  color: black; /* #DCE OPC-374 black background instead of white */
 }
+
+i.button-icon.icon-screen:before {
+  content: none; /* "\e92d"; #DCE OPC-374 remove screen icon (just display text) */
+}
+
+/* Keep DCE custon icons */
+i.button-icon.icon-closed-captions,
+i.button-icon.icon-menu-dots,
+i.button-icon.icon-flexSkip_Rewind_10,
+i.button-icon.icon-flexSkip_Forward_30,{
+    left: 0px;
+}
+
+i.button-icon.icon-closed-captions::before,
+i.button-icon.icon-flexSkip_Rewind_10::before,
+i.button-icon.icon-flexSkip_Forward_30::before,
+i.button-icon.icon-menu-dots::before {
+    width: 30px;
+    height: 30px;
+    background-image: url(../images/paella_icons_light_dce.png);
+    background-size: 2000% 1000%;
+    color: #151515;
+    content: '';
+    display: block;
+}
+
+i.button-icon.icon-menu-dots::before {
+  background-position: -800% -200%;
+}
+i.button-icon.icon-flexSkip_Rewind_10::before {
+  background-position: -205% 22%;
+}
+i.button-icon.icon-flexSkip_Forward_30::before {
+  background-position: -200% 22%;
+}
+i.button-icon.icon-closed-captions::before {
+  background-position: -1000% -200%;
+}
+
+/* #DCE override for paella logo icon */
+img#paella_logo-png {
+    display: none;
+}
+
+/* #DCE  */
 

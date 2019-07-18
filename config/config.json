@@ -1,18 +1,40 @@
 {
   "dceMaxWidth": true,
-  "defaultProfile": "professor_slide",
+  "defaultProfile": "side_by_side",
+  "defaultCaptionLang" : "en",
   "player": {
+    "accessControlClass":"paella.AccessControl",
+    "accessControlClass-OPENCAST": "OpencastAccessControl",
     "videoZoom" : {
-      "enabled" : false
+      "enabled" : false,
+      "max": 800,
+      "minWindowSize": 500
     },
     "profileFrameStrategy": "paella.ProfileFrameStrategy",
     "videoQualityStrategy": "paella.RequestedOrBestFitVideoQualityStrategy",
+    "#DCE reloading video on full screen is problematic with rtmp live streams":"",
+    "reloadOnFullscreen": false,
     "methods": [
+       {
+        "factory":"HLSVideoFactory",
+        "enabled":true,
+        "config": {
+          "*** You can add more hls.js settings here": "",
+          "https://github.com/video-dev/hls.js/blob/master/docs/API.md": "",
+          "maxBufferLength": 30,
+				  "maxMaxBufferLength": 600,
+				  "maxBufferSize": 60000000,
+				  "maxBufferHole": 0.5,
+				  "lowBufferWatchdogPeriod": 0.5,
+          "highBufferWatchdogPeriod": 3
+        },
+        "iOSMaxStreams": 2,
+        "androidMaxStreams": 2
+       },
        { "factory":"ChromaVideoFactory", "enabled":true },
        { "factory":"WebmVideoFactory", "enabled":true },
        { "factory":"Html5VideoFactory", "enabled":true },
        { "factory":"MpegDashVideoFactory", "enabled":true },
-       { "factory":"HLSVideoFactory", "enabled":true },
        { "factory":"RTMPVideoFactory", "enabled":true },
        { "factory":"ImageVideoFactory", "enabled":true },
        { "factory":"YoutubeVideoFactory", "enabled":true },
@@ -22,10 +44,6 @@
     "audioMethods":[
        { "factory":"MultiformatAudioFactory", "enabled":true }
      ],
-     "audio": {
-         "master": 1.0,
-         "slave": 0.0
-     },
      "rtmpSettings": {
          "bufferTime": 5,
          "requiresSubscription": false
@@ -48,17 +66,17 @@
     "dataDelegates": {
       "default": "CookieDataDelegate",
       "trimming": "MHAnnotationServiceTrimmingDataDelegate",
-      "userInfo": "UserDataDelegate",
       "metadata":"VideoManifestMetadataDataDelegate",
       "annotations": "MHAnnotationServiceDefaultDataDelegate",
       "visualAnnotations": "MHAnnotationServiceDefaultDataDelegate",
       "comments": "MHAnnotationServiceDefaultDataDelegate",
       "footprints": "MHFootPrintsDataDelegate",
       "timedComments": "TimedCommentsDataDelegate",
-      "captions": "MHCaptionsDataDelegate",
-      "SingleVideoExport": "MHAnnotationServiceVideoExportDelegate",
-      "MultipleVideoExport": "MHAnnotationServiceVideoExportDelegate"
+      "cameraTrack":"OpencastTrackCameraDataDelegate"
     }
+  },
+  "experimental": {
+    "autoplay": true
   },
   "skin": {
     "default": "cs50",
@@ -70,6 +88,73 @@
       "enabled": true
     },
     "list": {
+      "es.upv.paella.opencast.loader": {
+        "streams": [
+          {
+            "filter": {
+              "system": ["*"]
+            },
+            "tracks": {
+              "flavors": ["*/*"],
+              "tags": []
+            }
+          }
+        ]
+      },
+      "//**** Video profile plugins": "",
+      "es.upv.paella.singleStreamProfilePlugin": {
+          "enabled": true,
+          "videoSets": [
+            { "icon":"professor_icon.svg", "id":"presenter", "content":["presenter"]},
+            { "icon":"slide_icon.svg", "id":"presentation", "content":["presentation"]}
+          ]
+
+      },
+      "es.upv.paella.dualStreamProfilePlugin": { "enabled":false,
+        "videoSets": [
+          { "icon":"slide_professor_icon.svg", "id":"presenter_presentation", "content":["presenter","presentation"] },
+          { "icon":"slide_professor_icon.svg", "id":"presenter2_presentation", "content":["presenter-2","presentation"] },
+          { "icon":"slide_professor_icon.svg", "id":"presenter3_presentation", "content":["presenter-3","presentation"] }
+        ]
+      },
+      "es.upv.paella.tripleStreamProfilePlugin": {
+        "enabled": true,
+        "videoSets": [
+          { "icon":"three_streams_icon.svg", "id":"presenter_presentation_presenter2", "content":["presenter","presentation","multitrack"] },
+          { "icon":"three_streams_icon.svg", "id":"presenter_presentation_presenter3", "content":["presenter","presentation","presenter-2"] },
+          { "icon":"three_streams_icon.svg", "id":"presenter_presentation_presenter3", "content":["presenter","presentation","presenter-3"] }
+        ]
+      },
+      "edu.harvard.dce.paella.viewModeToggleProfilesPlugin": {
+        "enabled":true,
+        "//**** This Profile Plugin supports the edu.harvard.dce.paella.viewModeTogglePlugin": "",
+        "videoSets": [
+          { "icon":"slide_professor_icon.svg", "id":"side_by_side", "content":["presenter","presentation"] },
+          { "icon":"slide_professor_icon.svg", "id":"one_tiny_and_one_big", "content":["presenter","presentation"] },
+          { "icon":"slide_professor_icon.svg", "id":"one_only", "content":["presenter","presentation"] }
+        ]
+      },
+      "edu.harvard.dce.paella.resizeLiveStream": {
+         "enabled": true
+      },
+      "edu.harvard.edu.paella.singleMultipleQualitiesPlugin" : {
+         "enabled": false,
+         "showWidthRes":true,
+         "presenterHasAudioTag":"multiaudio"
+      },
+      "edu.harvard.dce.paella.presentationOnlyPlugin": {
+         "enabled": false
+      },
+      "edu.harvard.dce.paella.flexSkipPlugin": {
+        "enabled": true,
+        "direction": "Rewind",
+        "seconds": 10
+      },
+      "edu.harvard.dce.paella.flexSkipForwardPlugin": {
+        "enabled": true,
+        "direction": "Forward",
+        "seconds": 30
+      },
      "//****  UPV Captions Parser Plugins": "//****",
       "es.upv.paella.captions.DFXPParserPlugin": {"enabled":true},
       "es.teltek.paella.captions.WebVTTParserPlugin": {"enabled":true},
@@ -91,7 +176,8 @@
       "es.upv.paella.opencast.editor.SingleVideoExportEditorPlugin": {"enabled": false},
 
       "es.upv.paella.multipleQualitiesPlugin": {
-        "enabled": false
+        "enabled": true,
+        "showWidthRes": true
       },
       "es.upv.paella.ImageControlPlugin": {
         "enabled": false
@@ -141,28 +227,6 @@
         "enabled": true,
         "heartBeatTime": 30000
       },
-      "es.upv.paella.repeatButtonPlugin": {
-        "enabled": false,
-        "replacedBy": "flexSkipPlugin"
-      },
-      "edu.harvard.dce.paella.flexSkipPlugin": {
-        "enabled": true,
-        "direction": "Rewind",
-        "seconds": 10
-      },
-      "edu.harvard.dce.paella.flexSkipForwardPlugin": {
-        "enabled": true,
-        "direction": "Forward",
-        "seconds": 30
-      },
-      "edu.harvard.edu.paella.singleMultipleQualitiesPlugin" : {
-         "enabled": true,
-         "showWidthRes":true,
-         "presenterHasAudioTag":"multiaudio"
-      },
-      "edu.harvard.dce.paella.presentationOnlyPlugin": {
-         "enabled": true
-      },
       "es.upv.paella.footprintsPlugin": {
         "enabled": false
       },
@@ -186,15 +250,32 @@
           "es"
         ]
       },
-      "es.upv.paella.ZoomPlugin": {
-        "enabled": false,
-        "maxZoom": 500,
-        "minZoom": 100,
-        "zoomIncr": 10
+      "es.upv.paella.pipModePlugin": {
+        "//***** DCE disabled picture in picture: only works for mono-vid": "",
+        "enabled": false
       },
-      "es.upv.paella.videoZoomPlugin": { "enabled":false},
-      "es.upv.paella.audioLanguage": { "enabled":false },
-      "es.upv.paella.videoZoomToolbarPlugin": { "enabled":false, "targetStreamIndex":0 },
+      "es.upv.paella.ratePlugin": {
+        "enabled": false
+      },
+      "es.upv.paella.audioLanguage": {
+        "enabled": true
+      },
+      "es.upv.paella.videoZoomPlugin": {
+        "enabled": true
+      },
+      "es.upv.paella.videoZoomToolbarPlugin": {
+        "enabled": false,
+        "targetStreamIndex": 0
+      },
+      "es.upv.paella.videoZoomTrack4kPlugin": {
+        "enabled": true,
+        "targetStreamIndex": 0,
+        "autoModeByDefault": false
+      },
+      "es.upv.paella.airPlayPlugin": {
+        "//*** DCE TODO: vet this plugin in a separate release":"",
+        "enabled": false
+      },
       "es.upv.paella.fullScreenButtonPlugin": {
         "enabled": true,
         "reloadOnFullscreen": {
@@ -217,7 +298,7 @@
         "enabled": true
       },
       "edu.harvard.dce.paella.singleVideoTogglePlugin": {
-        "enabled": true
+        "enabled": false
       },
       "es.upv.paella.socialPlugin": {
         "enabled": false
@@ -226,7 +307,8 @@
         "enabled": true
       },
       "es.upv.paella.frameControlPlugin": {
-        "enabled":true
+        "enabled":true,
+        "showFullPreview": "auto"
       },
       "edu.harvard.dce.paella.infoPlugin": {
         "enabled": true
@@ -240,23 +322,37 @@
       "es.upv.paella.liveStreamingIndicatorPlugin": {
         "enabled": true
       },
-      "edu.harvard.dce.paella.resizeLiveStream": {
-        "enabled": true
+      "es.upv.paella.arrowSlidesNavigatorPlugin": {
+        "//**** DCE , big black chunky arrows overlay slave view":"",
+        "enabled": false,
+        "showArrowsIn": "slave"
+      },
+      "es.upv.paella.videoDataPlugin": {
+        "enabled": false,
+        "excludeLocations": [
+          "paellaplayer.upv.es"
+        ],
+        "excludeParentLocations": [
+          "localhost:8000"
+        ]
       },
       "edu.harvard.dce.paella.captionsPlugin": {
         "enabled": true,
         "searchOnCaptions": true
       },
+      "es.upv.paella.breaksPlayerPlugin": {
+        "enabled": true
+      },
       "es.upv.paella.overlayCaptionsPlugin": {
         "enabled": true
       },
       "edu.harvard.dce.paella.iphonePluginDisablerPlugin": {
-        "enabled": true,
+        "** TODO: to test if still needs to be enabled": "fullScreenPlugin.getMinWindowSize & frameControlPlugin.getMinWindowSize to 10000",
+        "enabled": false,
         "actiondelay":200
       },
-      "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
-        "enabled": true
-      }
+      "//*****  Keyboard plugins": "",
+      "es.upv.paella.defaultKeysPlugin": {"enabled": true }
     }
   },
   "standalone": {

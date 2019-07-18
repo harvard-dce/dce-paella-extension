@@ -22,12 +22,12 @@
   },
   "homepage": "https://github.com/harvard-dce/dce-paella-extensions",
   "devDependencies": {
-    "bluebird": "^3.4.6",
+    "bluebird": "^3.5.5",
     "call-next-tick": "^1.1.2",
     "jsonfile": "^2.3.1",
-    "lodash": "^3.10.1",
+    "lodash": "^4.17.15",
     "require-reload": "^0.2.2",
-    "tape": "^4.2.0"
+    "tape": "^4.11.0"
   },
   "dependencies": {}
 }

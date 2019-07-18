@@ -1,18 +1,24 @@
 /* MATT-2245 username alias UI
- * for the timedcomments
+ * for the timedcomments.
+ * This is a service accessed from timedCommentsOverlay
+ * Adapted for Paella 6.1.2
  */
 
-Class ("paella.TimedCommentsUsernameAlias", {
+class TimedCommentsUsernameAlias {
   
-  _currentPseudoNameDivId: "dceAnnotUserPseudoName",
-  _currentPseudoName: null,
-  _createPseudoNameMaxLen: 16,
-  _createPseudoNameDiv: null,
-  _host: null,
-  initialize:function() {
-  },
-
-  getPseudoName: function () {
+  constructor () {
+    this._currentPseudoNameDivId = "dceAnnotUserPseudoName";
+    this._currentPseudoName = null;
+    this._createPseudoNameMaxLen = 16;
+    this._createPseudoNameDiv = null;
+    this._host = null;
+    this.tc_alias_dialog = '<div id="dialog-form-alias"><form id="form-alias" accept-charset="UTF-8"> \
+    <label class="alias" for="tc_alias_input">Username Alias:</label> \
+    <input placeholder="student alias" maxlength="16" type="text" name="tc_alias_input" id="tc_alias_input" class="alias text" /> \
+    <div class="alias" id="alias-input-info"></div></div>';
+  }
+  
+  getPseudoName () {
     var thisClass = this;
     var defer = new $.Deferred();
     paella.data.read('timedComments', {
@@ -29,9 +35,9 @@ Class ("paella.TimedCommentsUsernameAlias", {
       defer.reject();
     });
     return defer;
-  },
+  }
   
-  setPseudoName: function (newPseudoName, pseudoNameInputElem) {
+  setPseudoName (newPseudoName, pseudoNameInputElem) {
     var thisClass = this;
     var defer = new $.Deferred();
     base.log.debug("TC about to set pseuduo name " + newPseudoName);
@@ -55,9 +61,9 @@ Class ("paella.TimedCommentsUsernameAlias", {
       }
     });
     return defer;
-  },
+  }
   
-  initAliasDialogElement: function (hostClass) {
+  initAliasDialogElement (hostClass) {
     var thisClass = this;
     thisClass._host = hostClass;
     var isNew = (thisClass._currentPseudoName == null);
@@ -117,31 +123,39 @@ Class ("paella.TimedCommentsUsernameAlias", {
     }
     // Build the alias input element
     thisClass.buildAliasDriver(isNew, action);
-  },
-
+  }
+  
   // MATT-2245 dialog requires jQuery-UI
-  buildAliasDriver: function(isNew, action) {
+  buildAliasDriver (isNew, action) {
     var thisClass = this;
-    var cancelFunction = function(){$(this).dialog("close");};
-    var buttonInfo =  [];
+    var cancelFunction = function () {
+      $(this).dialog("close");
+    };
+    var buttonInfo =[];
     if (isNew) {
-       buttonInfo.push({text:"Continue", click:action});
+      buttonInfo.push({
+        text: "Continue", click: action
+      });
     } else {
-       buttonInfo.push({text:"Cancel", click: cancelFunction});
-       buttonInfo.push({text:"Submit", click: action});
-   }
+      buttonInfo.push({
+        text: "Cancel", click: cancelFunction
+      });
+      buttonInfo.push({
+        text: "Submit", click: action
+      });
+    }
     // Create DOM dialog element to the root
     var newAliasInputDialog = $(thisClass.tc_alias_dialog);
     thisClass._createPseudoNameDiv = newAliasInputDialog;
     $('#playerContainer').append(newAliasInputDialog);
-
-    $("#form-alias").submit(function( event ) {
+    
+    $("#form-alias").submit(function (event) {
       event.preventDefault();
       event.stopImmediatePropagation();
       action();
       return false;
     });
-
+    
     $("#dialog-form-alias").dialog({
       modal: true,
       zIndex: 998,
@@ -153,23 +167,23 @@ Class ("paella.TimedCommentsUsernameAlias", {
       height: 160,
       width: 300,
       buttons: buttonInfo,
-      close: function() {
-        $("#dialog-form-alias").css('zIndex','');
+      close () {
+        $("#dialog-form-alias").css('zIndex', '');
       }
     });
-  },
-
+  }
+  
   // pass text for the dialog box and id of target to display near
-  showAliasDialog: function(aliasLabel, promptNote, targetElem){
+  showAliasDialog (aliasLabel, promptNote, targetElem) {
     $("#dialog-form-alias").find('label').text(aliasLabel);
     $("#alias-input-info").text(promptNote);
     $("#dialog-form-alias").dialog("open");
-    $("#dialog-form-alias").dialog( "option", "modal", true );
-    $(".ui-dialog.alias-prompt").css( "zIndex", 998 );
+    $("#dialog-form-alias").dialog("option", "modal", true);
+    $(".ui-dialog.alias-prompt").css("zIndex", 998);
     $('#tc_alias_input').focus();
-  },
-
-  updatePseudoName: function (retryPseduoname) {
+  }
+  
+  updatePseudoName (retryPseduoname) {
     var thisClass = this;
     var targetElement;
     var labelText = "";
@@ -198,9 +212,9 @@ Class ("paella.TimedCommentsUsernameAlias", {
     $('#tc_alias_input').attr('placeholder', placeholderText);
     $('#tc_alias_input').attr('maxlength', aliasMaxLength);
     thisClass.showAliasDialog(labelText, changePromptNote, targetElement);
-  },
-
-  addWelcomePseudoNameHeader: function (username) {
+  }
+  
+  addWelcomePseudoNameHeader (username) {
     var thisClass = this;
     if (username) {
       var messageDiv = document.createElement("div");
@@ -220,8 +234,9 @@ Class ("paella.TimedCommentsUsernameAlias", {
         return false;
       });
     }
-  },
-  tc_alias_dialog: '<div id="dialog-form-alias"><form id="form-alias" accept-charset="UTF-8"><label class="alias" for="tc_alias_input">Username Alias:</label><input placeholder="student alias" maxlength="16" type="text" name="tc_alias_input" id="tc_alias_input" class="alias text" /><div class="alias" id="alias-input-info"></div></div>'
-});
+  }
+};
 
-paella.timedCommentsUsernameAlias = new paella.TimedCommentsUsernameAlias();
+paella.TimedCommentsUsernameAlias = TimedCommentsUsernameAlias;
+
+// #DCE end timedcomments alias service, adapted for Paella 6.1.2
