@@ -1,6 +1,9 @@
 {
   "dceMaxWidth": true,
   "defaultProfile": "side_by_side",
+  "dceRequiredAudioTag":"multiaudio",
+  "dceRequiredAudioTagFlavor": "presentation/delivery",
+  "dceRoleMasterDefaultFlavor": "presenter",
   "defaultCaptionLang" : "en",
   "player": {
     "accessControlClass":"paella.AccessControl",
@@ -89,6 +92,7 @@
     },
     "list": {
       "es.upv.paella.opencast.loader": {
+        "orderTracks": ["presenter/delivery", "presenter/preview", "presentation/delivery", "presentation/preview"],
         "streams": [
           {
             "filter": {
@@ -99,7 +103,10 @@
               "tags": []
             }
           }
-        ]
+        ],
+        "audioTag": {
+        }
+
       },
       "//**** Video profile plugins": "",
       "es.upv.paella.singleStreamProfilePlugin": {
@@ -257,7 +264,7 @@
       "es.upv.paella.ratePlugin": {
         "enabled": false
       },
-      "es.upv.paella.audioLanguage": {
+      "es.upv.paella.audioSelector": {
         "enabled": true
       },
       "es.upv.paella.videoZoomPlugin": {
@@ -323,9 +330,11 @@
         "enabled": true
       },
       "es.upv.paella.arrowSlidesNavigatorPlugin": {
-        "//**** DCE , big black chunky arrows overlay slave view":"",
         "enabled": false,
-        "showArrowsIn": "slave"
+        "content":[
+          "presentation",
+          "presenter"
+        ]
       },
       "es.upv.paella.videoDataPlugin": {
         "enabled": false,
