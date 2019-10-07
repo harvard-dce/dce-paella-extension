@@ -155,12 +155,14 @@
       "edu.harvard.dce.paella.flexSkipPlugin": {
         "enabled": true,
         "direction": "Rewind",
-        "seconds": 10
+        "seconds": 10,
+        "minWindowSize": 510
       },
       "edu.harvard.dce.paella.flexSkipForwardPlugin": {
         "enabled": true,
         "direction": "Forward",
-        "seconds": 30
+        "seconds": 30,
+        "minWindowSize": 510
       },
      "//****  UPV Captions Parser Plugins": "//****",
       "es.upv.paella.captions.DFXPParserPlugin": {"enabled":true},

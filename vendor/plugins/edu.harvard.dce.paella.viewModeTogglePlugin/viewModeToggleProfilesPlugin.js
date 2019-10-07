@@ -240,6 +240,17 @@ paella.addProfile(() => {
             }],
             visible: true,
             layer: 1
+          }, {
+            content: validContent[1],
+            "rect":[ {
+              "aspectRatio": "16/9",
+              "width": "0",
+              "height": "0",
+              "top": "0",
+              "left": "0"
+            }],
+            "visible": "false",
+            "layer": "2"
           }],
           background: {
             content: "", zIndex: 5, rect: {
