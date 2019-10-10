@@ -17,7 +17,7 @@ var mockConfig = {
 
 var mockPaellaObject = {
   addPlugin: mockAddPlugin,
-  EventDrivenPlugin: class {
+  EarlyLoadPlugin: class {
     constructor(){}
   },
   super: function(){},
@@ -192,7 +192,7 @@ function setUpMocks(opts) {
           classInst[methodName] = opts.classMethods[methodName];
         }
       }
-      classInst.onEvent('myEvent');
+      classInst.load();
       return classInst;
     };
     global.paella.plugins['test'] = createClass();

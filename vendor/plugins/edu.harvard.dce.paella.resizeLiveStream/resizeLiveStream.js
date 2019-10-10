@@ -1,7 +1,7 @@
 // #DCE OPC-374 trigger a player resize at setComposition when video is live.
 // For RTMP, paella.player.onresize is never called to fix the view dimension.
 paella.addPlugin(function () {
-  return class HeartbeatSender extends paella.EventDrivenPlugin {
+  return class ResizeLiveStream extends paella.EventDrivenPlugin {
     getName() {
       return "edu.harvard.dce.paella.resizeLiveStream";
     }

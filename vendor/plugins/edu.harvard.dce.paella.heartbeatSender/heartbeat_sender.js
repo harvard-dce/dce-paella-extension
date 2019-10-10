@@ -4,10 +4,10 @@
 // Update for Paella 6.1.2
 // NOTE: This plugin sends a constant usage ping, where as the
 // es.upv.paella.opencast.userTrackingSaverPlugIn sends change events
-// Changing from FastLoadPlugin to EventDrivenPlugin triggered by load started
+// Keeping as FastLoadPlugin because FastLoadPlugin are loaded after loadcompleted
 
 paella.addPlugin(function () {
-  return class HeartbeatSender extends paella.EventDrivenPlugin {
+  return class HeartbeatSender extends paella.EarlyLoadPlugin {
     constructor() {
       super();
       this.heartbeatTimer = null;
@@ -16,12 +16,8 @@ paella.addPlugin(function () {
       return "edu.harvard.dce.paella.heartbeatSender";
     }
 
-    getEvents() {
-      return [paella.events.loadComplete];
-    }
-
-    onEvent(eventType, params) {
-      base.log.debug("Event '" + eventType + "': HUDCE HeartBeat timer interval " + this.config.heartBeatTime);
+    load(eventType, params) {
+      base.log.debug(`HUDCE HeartBeat timer loading with heartbeat interval: ${this.config.heartBeatTime}ms`);
       var thisClass = this;
       if (this.config.heartBeatTime > 0) {
         thisClass.heartbeatTimer = new base.Timer(
