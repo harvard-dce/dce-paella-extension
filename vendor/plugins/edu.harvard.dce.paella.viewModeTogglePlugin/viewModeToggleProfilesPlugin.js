@@ -8,8 +8,10 @@ paella.addProfile(() => {
       if (! available) {
         resolve(null);
       } else {
-        // do not allow multi-video to load to single video view on first load
-        if (base.cookies.get('lastProfile') === 'one_big') {
+        // do not allow multi-video to load to single video view on first load unless on an iOS
+        if (base.userAgent.system.iOS) {
+          base.cookies.set('lastProfile', 'one_big');
+        } else if (base.cookies.get('lastProfile') === 'one_big') {
           base.cookies.set('lastProfile', paella.player.config.defaultProfile || 'side_by_side');
         }
         resolve({
@@ -249,7 +251,7 @@ paella.addProfile(() => {
               "top": "0",
               "left": "0"
             }],
-            "visible": "false",
+            "visible": false,
             "layer": "2"
           }],
           background: {
@@ -264,11 +266,13 @@ paella.addProfile(() => {
           },
           switch: function () {
             // prep toggle for next setProfile
-            let v0 = this.validContent[0];
-            let v1 = this.validContent[1];
-            this.validContent[0] = v1;
-            this.validContent[1] = v0;
-            this.videos[0].content = this.validContent[0];
+            let vc0 = this.validContent[0];
+            let vc1 = this.validContent[1];
+            this.validContent[0] = vc1;
+            this.validContent[1] = vc0;
+            this.videos[0].content = vc1;
+            this.videos[1].content = vc0;
+
           }
         })
       }

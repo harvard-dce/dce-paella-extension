@@ -27,6 +27,8 @@ paella.addPlugin(function () {
       this._headerNoteMessage = "Automated Transcription - Provided by IBM Watson";
       this._hasTranscriptText = null;
       this._noTextFoundMessage = "No text was found during transcription.";
+      this._dceLangDefault = null; /*  OPC-407 reselect lang option when CC button clicked */
+      this._dceLangDefaultFound = null;
     }
     
     getAlignment () {
@@ -52,7 +54,7 @@ paella.addPlugin(function () {
     }
     
     closeOnMouseOut () {
-      return true;
+      return false; /* UPV https://github.com/polimediaupv/paella/commit/34f99cfcfe6bc9a52331bdab2a0c4948102cd716 */
     }
     
     checkEnabled (onSuccess) {
@@ -86,7 +88,7 @@ paella.addPlugin(function () {
       var id = paella.captions.getAvailableLangs()[0].id;
       self._hasTranscriptText = (paella.captions.getCaptions(id)._captions !== undefined);
       if (! self._hasTranscriptText) {
-        // don't do binds when not transcode text to scroll
+        // don't do binds when no transcode text to scroll
         return;
       }
       // end  MATT-2219
@@ -182,17 +184,21 @@ paella.addPlugin(function () {
     
     onCaptionAdded (obj) {
       var thisClass = this;
-      
       var newCap = paella.captions.getCaptions(obj);
-      
+
+      // #DCE Do not replace existing captions when toggling single-view video (DCE specific).
+      if (obj && thisClass._select.options && thisClass._select.options.length > 0  && $(`.captionsSelector option[value='${obj}']`).length > 0) {
+        return;
+      }
+
       var defOption = document.createElement("option");
       // NO ONE SELECT
-      defOption.text = newCap._lang.txt;
+      defOption.text = newCap._lang.txt; // #DCE WARN, the txt is a language, not On/Off.
       defOption.value = obj;
       
       thisClass._select.add(defOption);
     }
-    
+
     changeSelection () {
       var thisClass = this;
       
@@ -209,6 +215,8 @@ paella.addPlugin(function () {
         thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
       }
       thisClass.setButtonHideShow();
+      thisClass.onClose();
+      paella.player.controls.hidePopUp(thisClass.getName());
     }
     
     onChangeSelection (obj) {
@@ -222,12 +230,18 @@ paella.addPlugin(function () {
         } else {
           $(thisClass._input).prop('disabled', false);
           thisClass._select.value = obj;
+          thisClass._dceLangDefaultFound = true;
           if (thisClass._searchOnCaptions) {
             thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
           }
         }
         thisClass._activeCaptions = obj;
         thisClass.setButtonHideShow();
+      }
+      if (thisClass._open) {
+        // OPC-407 close after selection
+        thisClass.onClose();
+        paella.player.controls.hidePopUp(thisClass.getName());
       }
     }
     
@@ -238,26 +252,39 @@ paella.addPlugin(function () {
       
       switch (self._open) {
         case 0:
-        if (self._browserLang && paella.captions.getActiveCaptions() == undefined) {
-          self.selectDefaultBrowserLang(self._browserLang);
-        }
-        self._open = 1;
-        paella.keyManager.enabled = false;
+        self.onOpen();
         break;
         
         case 1:
-        paella.keyManager.enabled = true;
-        self._open = 0;
+        self.onClose();
         break;
       }
     }
-    
+
+    onOpen() {
+      if (this._browserLang && paella.captions.getActiveCaptions() == undefined) {
+        this.selectDefaultOrBrowserLang(this._browserLang);
+      }
+      // OPC-407 re-enable existing captions on click open
+      if (this._select && this._select.value === "" && this._dceLangDefaultFound) {
+          this._select.value = this._dceLangDefault;
+          this.changeSelection();
+      }
+       this._open = 1;
+       paella.keyManager.enabled = false;
+    }
+
+    onClose() {
+      paella.keyManager.enabled = true;
+      this._open = 0;
+    }
+
     buildContent (domElement) {
       var thisClass = this;
       
       //captions CONTAINER
       thisClass._parent = document.createElement('div');
-      thisClass._parent.className = 'captionsPluginContainer';
+      thisClass._parent.className = 'dceCaptionsPluginContainer';
       //captions BAR
       thisClass._bar = document.createElement('div');
       thisClass._bar.className = 'dceCaptionsBar';
@@ -358,6 +385,7 @@ paella.addPlugin(function () {
         var option = document.createElement("option");
         option.text = base.dictionary.translate("On");
         option.value = langs[0].id;
+        thisClass._dceLangDefault = langs[0].id;
         thisClass._select.add(option);
       }
       
@@ -370,17 +398,20 @@ paella.addPlugin(function () {
       });
     }
     
-    selectDefaultBrowserLang (code) {
+    selectDefaultOrBrowserLang (code) {
       var thisClass = this;
       var provider = null;
+      var fallbackProvider = null;
       paella.captions.getAvailableLangs().forEach(function (l) {
-        if (l.lang.code == code) {
+        if (l.lang.code === code) {
           provider = l.id;
+        } else if (l.lang.code === paella.player.config.defaultCaptionLang) {
+          fallbackProvider = l.id;
         }
       });
       
-      if (provider) {
-        paella.captions.setActiveCaptions(provider);
+      if (provider || fallbackProvider) {
+        paella.captions.setActiveCaptions(provider || fallbackProvider);
       }
       /*
       else{
