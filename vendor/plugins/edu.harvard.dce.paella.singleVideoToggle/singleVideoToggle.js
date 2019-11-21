@@ -52,8 +52,15 @@ paella.addPlugin(function () {
     }
     action(button) {
       let This = this;
-      paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {
+      let currentTrimmedTimeToSeek = 0;
+      paella.player.videoContainer.currentTime()
+      .then((currentTrimmedTime) => {
+        currentTrimmedTimeToSeek = currentTrimmedTime;
+        return paella.player.videoContainer.masterVideo().getVideoData();
+      })
+      .then((videoData) => {
         paella.dce.videoDataSingle = videoData;
+        paella.dce.videoDataSingle.currentTrimmedTimeToSeek = currentTrimmedTimeToSeek;
         paella.dce.videoDataSingle.playbackRate = paella.player.videoContainer.masterVideo().video.playbackRate;
         // pause videos to temporarily stop update timers
         paella.player.videoContainer.pause().then(function () {
@@ -72,7 +79,7 @@ paella.addPlugin(function () {
       });
     }
     _resetPlayerState () {
-      paella.player.videoContainer.seekToTime(paella.dce.videoDataSingle.currentTime);
+      paella.player.videoContainer.seekToTime(paella.dce.videoDataSingle.currentTrimmedTimeToSeek);
       paella.player.videoContainer.setVolume(paella.dce.videoDataSingle.volume);
       paella.player.videoContainer.setPlaybackRate(paella.dce.videoDataSingle.playbackRate);
       // User is required to click play to restart toggled video
