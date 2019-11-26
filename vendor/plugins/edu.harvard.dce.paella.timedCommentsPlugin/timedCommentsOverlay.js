@@ -591,6 +591,8 @@ paella.addPlugin(function () {
       var confirmText = 'Ok to make update: "' + $(textareaDiv).text() + '" ?';
       if (confirm(confirmText)) {
         thisClass.editComment(textareaDiv);
+        // OPC-228 add usertracking to info on quality selection
+        paella.userTracking.log("paella:social:edit");
       } else {
         // reload to change back
         thisClass.reloadComments();
@@ -705,6 +707,8 @@ paella.addPlugin(function () {
         };
         paella.player.videoContainer.currentTime().then(function (time) {
           thisClass.writeComment(data, time, isPrivate);
+          // OPC-228 add usertracking to info on quality selection
+          paella.userTracking.log("paella:social:addcomment");
         });
       },
       // else log issue
@@ -751,6 +755,8 @@ paella.addPlugin(function () {
           timedComment: newComment
         };
         thisClass.writeComment(data, inPoint, isPrivate);
+        // OPC-228 add usertracking to info on quality selection
+        paella.userTracking.log("paella:social:addreply");
       },
       // else log issue
       base.log.debug("TC, unable to retrieve user information, cannot write comment"));

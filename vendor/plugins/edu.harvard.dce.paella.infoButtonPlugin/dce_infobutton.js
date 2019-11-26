@@ -81,6 +81,8 @@ paella.addPlugin(function () {
     }
     
     onItemClick (buttonAction) {
+      // OPC-228 add usertracking to info option selection
+      paella.userTracking.log("paella:info:select", buttonAction);
       switch (buttonAction) {
         case ('About player'):
         var param = paella.player.isLiveStream() ? "show=live": "show=vod";

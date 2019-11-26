@@ -322,6 +322,8 @@ paella.addPlugin(function () {
         This.setText(q.shortLabel());
         This.currentLabel = q.shortLabel();
         This._currentQuality = q;
+        // OPC-228 add usertracking to info on quality selection
+        paella.userTracking.log("paella:videoquality:set", q.shortLabel());
       });
     }
     

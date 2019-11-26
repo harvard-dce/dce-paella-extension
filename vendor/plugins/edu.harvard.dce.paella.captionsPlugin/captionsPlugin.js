@@ -427,6 +427,10 @@ paella.addPlugin(function () {
         if (text == "") {
           thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
         } else {
+          // OPC-228 add usertracking to caption term search. Shorten long terms.
+          let maxTrackSize = 64;
+          let trackingTerm = (text && text.length > maxTrackSize) ? `${text.substring(0, maxTrackSize - 4)}...` : text ;
+          paella.userTracking.log("paella:caption:search", trackingTerm);
           c.search(text, function (err, resul) {
             if (! err) {
               thisClass.buildBodyContent(resul, "search");
