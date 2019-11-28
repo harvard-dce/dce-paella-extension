@@ -17,6 +17,9 @@ paella.addPlugin(function () {
     getDefaultToolTip () {
       return base.dictionary.translate("Switch videos");
     }
+    getAriaLabel() {
+      return base.dictionary.translate("Switch videos");
+    }
     getAlignment() {
       return 'right';
     }
@@ -25,9 +28,6 @@ paella.addPlugin(function () {
     }
     getIconClass() {
       return 'icon-presentation-mode';
-    }
-    getDefaultToolTip() {
-      return base.dictionary.translate("Change video layout");
     }
     getIndex() {
       return 450;

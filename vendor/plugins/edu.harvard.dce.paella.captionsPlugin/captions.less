@@ -7,6 +7,8 @@
 
 /* Seleparate DCE caption plugin ids from default UPV cpation ids*/
 .dceCaptionsBar {
+		display: inline-flex;
+		width: 100%;
   input {
 		color: @popup_text_color;
 		background-color: @backgroundColor;
@@ -148,4 +150,46 @@
 	margin-right: auto;
 	padding: 8px;
 	border-radius: 12px;
+}
+
+/* =========================== */
+/* DCE Captions on-off toggle  */
+
+
+#show-captions-switch-label {
+  width: 300px;
+  margin-left: 8px;
+  margin-top: .3em;
+}
+
+.show-captions-switch-container {
+  display: inline-block;
+  width: 40px;
+}
+#show-captions-switch {
+  display: none;
+}
+.show-caption-switch-display {
+  background-color: #000;
+  color: black;
+  width: 4.8em;
+  height: 2.4em;
+  border-radius: 0.3em;
+  display: inline-block;
+  margin-left: 4px;
+  margin-top: 4px;
+  padding-left: 0.3em;
+  padding-top: 0.2em;
+}
+#show-captions-switch + .show-caption-switch-display > span {
+  padding: 0.2em 0.4em;
+  line-height: 2em;
+  font-weight: bold;
+  width: 2em;
+  border-radius: 0.3em;
+}
+#show-captions-switch:checked + .show-caption-switch-display > span.captions-on,
+#show-captions-switch:not(:checked) + .show-caption-switch-display > span.captions-off {
+  background: #fff;
+  color: #000;
 }

@@ -27,6 +27,9 @@ paella.addPlugin(function () {
     getDefaultToolTip() {
       return base.dictionary.translate("Class Handouts");
     }
+    getAriaLabel() {
+      return base.dictionary.translate("Handouts");
+    }
     
     buildContent(domElement) {
       this.domElement = domElement;

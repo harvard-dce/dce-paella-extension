@@ -16,12 +16,14 @@ paella.addPlugin(function () {
       this._bar = null;
       this._input = null;
       this._select = null;
+      this._switch = null; // OPC-436 switch div for on-off toggle
       this._editor = null;
       this._activeCaptions = null;
       this._lastSel = null;
       this._browserLang = null;
       this._defaultBodyHeight = 280;
       this._autoScroll = true;
+      this._autoScrollEvent = false; // #DCE OPC-427 fix auto scroll
       this._searchOnCaptions = null;
       this._headerNoteKey = "automated",
       this._headerNoteMessage = "Automated Transcription - Provided by IBM Watson";
@@ -52,9 +54,13 @@ paella.addPlugin(function () {
     getIndex () {
       return 664;
     }
+    getAriaLabel() {
+      return base.dictionary.translate("Captions");
+    }
     
     closeOnMouseOut () {
       return false; /* UPV https://github.com/polimediaupv/paella/commit/34f99cfcfe6bc9a52331bdab2a0c4948102cd716 */
+      // #DCE OPC-436 close on mouse out when  selecting language is Ok if option select is changed to checkbox or unorded list
     }
     
     checkEnabled (onSuccess) {
@@ -102,11 +108,6 @@ paella.addPlugin(function () {
         self.onChangeSelection(params);
       });
       
-      paella.events.bind(paella.events.captionAdded, function (event, params) {
-        self.onCaptionAdded(params);
-        paella.plugins.captionsPlugin.showUI();
-      });
-      
       paella.events.bind(paella.events.timeUpdate, function (event, params) {
         if (self._searchOnCaptions) {
           self.updateCaptionHiglighted(params);
@@ -117,6 +118,11 @@ paella.addPlugin(function () {
         self.cancelHideBar();
       });
       
+      // #DCE OPC-429 at video ended, re-enable auto-scroll to prep for video restart
+      paella.events.bind(paella.events.ended, event => {
+        self._autoScroll = true;
+      });
+
       self._activeCaptions = paella.captions.getActiveCaptions();
       
       self._searchOnCaptions = self.config.searchOnCaptions || false;
@@ -128,95 +134,75 @@ paella.addPlugin(function () {
         paella.player.controls.cancelHideBar();
       }
     }
-    
-    updateCaptionHiglighted (time) {
+
+	  updateCaptionHiglighted(time) { //#DCE OPC-427 retrieve UPV upstream time start fix
       var thisClass = this;
       var sel = null;
       var id = null;
-      if (time) {
-        id = thisClass.searchIntervaltoHighlight(time);
-        
-        if (id != null) {
-          sel = $(".bodyInnerContainer[sec-id='" + id + "']");
-          
-          if (sel != thisClass._lasSel) {
-            $(thisClass._lasSel).removeClass("Highlight");
-          }
-          
-          if (sel) {
-            $(sel).addClass("Highlight");
-            if (thisClass._autoScroll) {
-              thisClass.updateScrollFocus(id);
+      if(time){
+        paella.player.videoContainer.trimming()
+          .then((trimming) => {
+            let offset = trimming.enabled ? trimming.start : 0;
+            let c = paella.captions.getActiveCaptions();
+            let caption = c && c.getCaptionAtTime(time.currentTime + offset);
+            let id = caption && caption.id;
+  
+            if(id != null){
+              sel = $( ".bodyInnerContainer[sec-id='"+id+"']" );
+  
+              if(sel != thisClass._lasSel){
+                $(thisClass._lasSel).removeClass("Highlight");
+              }
+  
+              if(sel){
+                $(sel).addClass("Highlight");
+                if(thisClass._autoScroll){
+                  thisClass.updateScrollFocus(id);
+                }
+                thisClass._lasSel = sel;
+              }
             }
-            thisClass._lasSel = sel;
-          }
-        }
+          });
       }
-    }
-    
-    searchIntervaltoHighlight (time) {
-      var thisClass = this;
-      var resul = null;
-      
-      if (paella.captions.getActiveCaptions()) {
-        var n = paella.captions.getActiveCaptions()._captions;
-        n.forEach(function (l) {
-          if (l.begin < time.currentTime && time.currentTime < l.end) thisClass.resul = l.id;
-        });
-      }
-      if (thisClass.resul != null) return thisClass.resul; else return null;
     }
     
     updateScrollFocus (id) {
-      var thisClass = this;
-      var resul = 0;
-      var t = $(".bodyInnerContainer").slice(0, id);
-      t = t.toArray();
-      
-      t.forEach(function (l) {
-        var i = $(l).outerHeight(true);
-        resul += i;
-      });
-      
-      var x = parseInt(resul / 280);
-      $(".dceCaptionsBody").scrollTop(x * thisClass._defaultBodyHeight);
-    }
-    
-    onCaptionAdded (obj) {
-      var thisClass = this;
-      var newCap = paella.captions.getCaptions(obj);
-
-      // #DCE Do not replace existing captions when toggling single-view video (DCE specific).
-      if (obj && thisClass._select.options && thisClass._select.options.length > 0  && $(`.captionsSelector option[value='${obj}']`).length > 0) {
-        return;
+      let sel = $( ".bodyInnerContainer[sec-id='"+id+"']" );
+      let prevSel = $( ".bodyInnerContainer[sec-id='"+ (id-1) +"']" );
+      // add scroll buffer of the previous caption line
+      if (prevSel.length > 0 ) {
+        sel = prevSel;
       }
-
-      var defOption = document.createElement("option");
-      // NO ONE SELECT
-      defOption.text = newCap._lang.txt; // #DCE WARN, the txt is a language, not On/Off.
-      defOption.value = obj;
-      
-      thisClass._select.add(defOption);
+      if (sel.length > 0 ) {
+        this._autoScrollEvent = true; // #DCE OPC-427 fix auto scroll
+        $(".dceCaptionsBody").scrollTop(sel[0].offsetTop); // #DCE OPC-427 fix scroll position
+      }
     }
 
     changeSelection () {
       var thisClass = this;
+      // #DCE OPC-436 re-write on-off toggle to simplify it stop browser control of option element styling
+      var sel = $("#show-captions-switch:checked").length > 0 ? this._dceLangDefault: "";
       
-      var sel = $(thisClass._select).val();
+      // Reload the default captions if non selected last time
       if (sel == "") {
         $(thisClass._body).empty();
+        $(thisClass._input).val(""); // unset search item when turning off captions
+        $("#captionsBarInput").css('display','inherit');
         paella.captions.setActiveCaptions(sel);
         return;
       }
-      // BREAK IF NO ONE SELECTED
+
+      // reload the selected captions
       paella.captions.setActiveCaptions(sel);
       thisClass._activeCaptions = sel;
       if (thisClass._searchOnCaptions) {
         thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
       }
-      thisClass.setButtonHideShow();
-      thisClass.onClose();
-      paella.player.controls.hidePopUp(thisClass.getName());
+      // #DCE OPC-436 close on focus out or click button, but not on selection change
+      //thisClass.setButtonHideShow();
+      //thisClass.onClose();
+      //paella.player.controls.hidePopUp(thisClass.getName());
     }
     
     onChangeSelection (obj) {
@@ -227,8 +213,15 @@ paella.addPlugin(function () {
         if (obj == undefined) {
           thisClass._select.value = "";
           $(thisClass._input).prop('disabled', true);
+          $(thisClass._input).val(""); // unset search item when disabling
+          $(thisClass._switch).prop("aria-checked", false);
+          $(thisClass._switch).prop("checked", false);
+          $("#captionsBarInput").css('visibility','hidden');
         } else {
           $(thisClass._input).prop('disabled', false);
+          $(thisClass._switch).prop("aria-checked", true);
+          $(thisClass._switch).prop("checked", true);
+          $("#captionsBarInput").css('visibility','visible');
           thisClass._select.value = obj;
           thisClass._dceLangDefaultFound = true;
           if (thisClass._searchOnCaptions) {
@@ -240,8 +233,9 @@ paella.addPlugin(function () {
       }
       if (thisClass._open) {
         // OPC-407 close after selection
-        thisClass.onClose();
-        paella.player.controls.hidePopUp(thisClass.getName());
+        // OPC-436 only close on focus out
+        //thisClass.onClose();
+        //paella.player.controls.hidePopUp(thisClass.getName());
       }
     }
     
@@ -270,6 +264,13 @@ paella.addPlugin(function () {
           this._select.value = this._dceLangDefault;
           this.changeSelection();
       }
+
+      // reset the last search to empty
+      if ($(this._input).val() !== "") {
+          $(this._input).val("");
+          this.doSearch("");
+      }
+
        this._open = 1;
        paella.keyManager.enabled = false;
     }
@@ -325,6 +326,12 @@ paella.addPlugin(function () {
         thisClass._addTagHeader(thisClass._parent, paella.dce.captiontags);
       }
       domElement.appendChild(thisClass._parent);
+
+      // #DCE OPC-436 caption fade, set onClose params when hidding popup
+      $(domElement).mouseleave(function (evt) {
+        thisClass.onClose();
+        paella.player.controls.playbackControl().hidePopUp(thisClass.getName(), thisClass.button);
+      });
     }
     buildSearch () {
       var thisClass = this;
@@ -333,7 +340,12 @@ paella.addPlugin(function () {
       thisClass._parent.appendChild(thisClass._body);
       //BODY JQUERY
       $(thisClass._body).scroll(function () {
-        thisClass._autoScroll = false;
+        // #DCE OPC-427 fix automatic transcription popup scrolling
+        if (thisClass._autoScrollEvent) {
+          thisClass._autoScrollEvent = false;  // reset the current auto event flag
+        } else {
+          thisClass._autoScroll = false; // this scroll was manual, so stop auto scrolling
+        }
       });
       
       //INPUT
@@ -362,36 +374,70 @@ paella.addPlugin(function () {
         thisClass._searchTimerTime);
       });
     }
-    
-    buildSelect () {
-      var thisClass = this;
-      //SELECT
-      thisClass._select = document.createElement("select");
-      thisClass._select.className = "captionsSelector";
-      
-      var defOption = document.createElement("option");
-      // NO ONE SELECT
-      defOption.text = base.dictionary.translate("Off");
-      defOption.value = "";
-      thisClass._select.add(defOption);
-      
+
+
+    // #DCE OPC-436 re-write on-off toggle to simplify it stop browser control of option element styling
+    buildSelect() {
+      let containerId = "show-captions-switch-container";
+      let labelId = "show-captions-switch-label";
+      let inputId = "show-captions-switch";
+      let displayClass = "show-caption-switch-display";
+      let labelText = "Show Captions";
+      let thisClass = this;
+
+      thisClass._select = document.createElement("div");
+      thisClass._select.id = containerId;
+
+      let label = document.createElement("label");
+      label.setAttribute("id", labelId);
+      label.setAttribute("for", inputId);
+      label.textContent = labelText;
+
+      thisClass._switch = document.createElement("input");
+      thisClass._switch.setAttribute("type", "checkbox");
+      thisClass._switch.setAttribute("id", inputId);
+      thisClass._switch.setAttribute("role", "switch");
+      thisClass._switch.setAttribute("aria-checked", false);
+      // false to start
+      thisClass._switch.setAttribute("disabled", "disabled");
+      // disabled  until a language is found
+      thisClass._switch.setAttribute("aria-labelledby", labelId);
+
+      let displayDiv = document.createElement("div");
+      displayDiv.setAttribute("class", displayClass);
+
+      let spanOff = document.createElement("span");
+      spanOff.setAttribute("class", "captions-off");
+      spanOff.textContent = base.dictionary.translate("off");
+
+      // Input must be first child of label (to accomadate styling)
+      label.appendChild(thisClass._switch);
+
+      // Find a CC lang
       var langs = paella.captions.getAvailableLangs();
       if (Array.isArray(langs) && langs.length > 0) {
-        // In our case, there should only be one language.
-        // We are going to label it 'On', so that functionally, the select
-        // control behaves as an on/off switch for captions
-        // Later, when captions and transcripts are in separate plugins, this
-        // select control will be removed entirely.
-        var option = document.createElement("option");
-        option.text = base.dictionary.translate("On");
-        option.value = langs[0].id;
+        let spanOn = document.createElement("span");
+        spanOn.setAttribute("class", "captions-on");
+        spanOn.setAttribute("data-value", langs[0].id);
+        spanOn.textContent = base.dictionary.translate("on");
+        // save ref to default lang
         thisClass._dceLangDefault = langs[0].id;
-        thisClass._select.add(option);
+        displayDiv.appendChild(spanOn);
+        // turn on by default
+        thisClass._switch.setAttribute("aria-checked", true);
+        thisClass._switch.setAttribute("checked", true);
+        thisClass._switch.removeAttribute("disabled");
       }
-      
+
+      // append the children
+      displayDiv.appendChild(spanOff);
+      label.appendChild(displayDiv);
+      thisClass._select.appendChild(label);
+
+      // attach to the parents
       thisClass._bar.appendChild(thisClass._select);
       thisClass._parent.appendChild(thisClass._bar);
-      
+
       //jQuery SELECT
       $(thisClass._select).change(function () {
         thisClass.changeSelection();
@@ -427,9 +473,11 @@ paella.addPlugin(function () {
         if (text == "") {
           thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
         } else {
-          // OPC-228 add usertracking to caption term search. Shorten long terms.
-          let maxTrackSize = 64;
-          let trackingTerm = (text && text.length > maxTrackSize) ? `${text.substring(0, maxTrackSize - 4)}...` : text ;
+        // OPC-228 add usertracking to caption term search. Shorten long terms.
+        let maxTrackSize = 64;
+        let trackingTerm = (text && text.length > maxTrackSize) ? `$ {
+        text.substring(0, maxTrackSize - 4)
+        }...`: text;
           paella.userTracking.log("paella:caption:search", trackingTerm);
           c.search(text, function (err, resul) {
             if (! err) {
@@ -475,9 +523,14 @@ paella.addPlugin(function () {
     }
     
     buildBodyContent (obj, type) {
+      paella.player.videoContainer.trimming()
+      .then((trimming)=>{
       var thisClass = this;
       $(thisClass._body).empty();
       obj.forEach(function (l) {
+        if(trimming.enabled && (l.end<trimming.start || l.begin>trimming.end)){
+          return; // from UPV upstream, trim out captions before start and after end
+        }
         thisClass._inner = document.createElement('div');
         thisClass._inner.className = 'bodyInnerContainer';
         thisClass._inner.innerHTML = l.content;
@@ -491,11 +544,18 @@ paella.addPlugin(function () {
           thisClass._inner.setAttribute('sec-begin', l.time);
         }
         thisClass._body.appendChild(thisClass._inner);
-        $(thisClass._inner).click(function () {
+
+        // #DCE start trim seek fix from UPV upstream captionsPlugin
+        $(thisClass._inner).click(function(){
           var secBegin = $(this).attr("sec-begin");
-          paella.player.videoContainer.seekToTime(parseInt(secBegin));
+          paella.player.videoContainer.trimming()
+          .then((trimming) => {
+          let offset = trimming.enabled ? trimming.start : 0;
+          paella.player.videoContainer.seekToTime(secBegin - offset + 0.01);
+          });
         });
       });
+     });
     }
     
     _addTagHeader (container, tags) {

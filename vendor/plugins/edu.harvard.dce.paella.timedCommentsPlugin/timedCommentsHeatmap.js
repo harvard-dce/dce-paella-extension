@@ -35,6 +35,9 @@ paella.addPlugin(function () {
     getDefaultToolTip() {
       return base.dictionary.translate("Show comments");
     }
+    getAriaLabel() {
+      return base.dictionary.translate("Social notes");
+    }
     getName() {
       return "edu.harvard.dce.paella.timedCommentsHeatmapPlugin";
     }

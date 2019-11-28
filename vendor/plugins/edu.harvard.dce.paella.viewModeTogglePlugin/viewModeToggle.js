@@ -27,6 +27,9 @@ paella.addPlugin(function () {
         getIndex () {
             return 450;
         }
+        getAriaLabel() {
+            return base.dictionary.translate("Switch video layouts");
+        }
         getAlignment () {
             return 'right';
         }
