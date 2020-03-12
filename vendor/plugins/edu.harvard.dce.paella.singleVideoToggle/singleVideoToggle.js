@@ -1,5 +1,6 @@
 /** #DCE SingleVideoTogglePlugin
- * Purpose: reduce bandwidth on mobile by toggling between presentation & presenter video.
+ * Purpose 1: Reduce bandwidth on mobile by toggling between presentation & presenter video.
+ * Purpose 2: Allow user to toggle resolution of DCE HLS Live video (v1 Toggling requires reloading diff res video).
  * Uses audio from the visible track (no enabled if special HUDCE tag: multiaudio is not set)
  *
  * Updated for Paella 6x
@@ -10,24 +11,32 @@ paella.addPlugin(function () {
   return class SingleVideoTogglePlugin extends paella.ButtonPlugin {
     constructor () {
       super ();
+      this._toggleSingleVideoIndex = 0;
+      this._toggleHlsLiveResV1Index = 1;
+      this._toolTipOpts = ["Switch videos", "Change resolution"];
+      this._subClassOpts = ["showViewModeButton", "showMultipleQualitiesPlugin"];
+      this._iconClassOpts = ["icon-presentation-mode","icon-screen"];
+      this._curOptIndex = 0; // iOS single video: toggle 2 videos to show only one
       this._iOSProfile = 'one_big';
       this._masterVideo = null;
       this._toggleIndex = 1; //toggle to presentation when button pressed first time
     }
     getDefaultToolTip () {
-      return base.dictionary.translate("Switch videos");
+      return base.dictionary.translate(this._toolTipOpts[this._getOptIndex()]);
     }
     getAriaLabel() {
-      return base.dictionary.translate("Switch videos");
+      return base.dictionary.translate(this._toolTipOpts[this._getOptIndex()]);
     }
     getAlignment() {
       return 'right';
     }
     getSubclass() {
-      return "showViewModeButton";
+      // #DCE OPC-497 show current res text on button (get the mutli quality button style)
+      return base.dictionary.translate(this._subClassOpts[this._getOptIndex()]);
     }
     getIconClass() {
-      return 'icon-presentation-mode';
+      // #DCE OPC-497 show current res text on button
+      return base.dictionary.translate(this._iconClassOpts[this._getOptIndex()]);
     }
     getIndex() {
       return 450;
@@ -35,15 +44,43 @@ paella.addPlugin(function () {
     getInstanceName() {
       return "singleVideoTogglePlugin";
     }
-    getName () {
+    getName() {
       return "edu.harvard.dce.paella.singleVideoTogglePlugin";
     }
-    _currentPlayerProfile () {
+
+    _getOptIndex() {
+        return (paella.dce && paella.dce.hlsLiveToggleV1) ? this._toggleHlsLiveResV1Index : this._toggleSingleVideoIndex;
+    }
+
+    _currentPlayerProfile() {
       return paella.player.selectedProfile;
     }
+
+    _printResIfHlsLive(streams) {
+      // Check if hlsLiveToggleV1 flag exists and the path to the source resolution value exists
+      // Then add the current resolution value into the control button
+      if  (paella.dce && paella.dce.hlsLiveToggleV1 && streams
+          && streams.length > 0
+          && streams[0].sources
+          && streams[0].sources.hls
+          && streams[0].sources.hls.length > 0
+          && streams[0].sources.hls[0].res) {
+            this.setText(streams[0].sources.hls[0].res.w + "p"); // change the UI res text
+      }
+    }
+
     checkEnabled (onSuccess) {
-      // Only enable for iOS (not Android) TODO: test with Safari on Android?
-      onSuccess (base.userAgent.system.iOS && paella.dce && paella.dce.sources && paella.dce.sources.length > 1 && ! paella.dce.blankAudio);
+      // Enable for iOS (not Android) TODO: test with Safari on Android?
+      let enabled = base.userAgent.system.iOS && paella.dce && paella.dce.sources && paella.dce.sources.length > 1 && ! paella.dce.blankAudio;
+
+      // #DCE OPC-497 also enable for HLS Live when 2 seperate m3u8 passed with different res for the same video, instead of one master m3u8 containing 2 res.
+      if (paella.dce && paella.dce.hlsLiveToggleV1) {
+          this._printResIfHlsLive(paella.player.videoLoader._data.streams);
+          this._curOptIndex = this._toggleHlsLiveResV1Index; // tool tip and class uses HLS live text and classes
+          enabled = true;
+      } // end DCE HLS Live v1
+
+      onSuccess(enabled);
     }
     getCurrentMasterVideo () {
       return paella.dce.videoPlayers.find(player => {
@@ -71,10 +108,13 @@ paella.addPlugin(function () {
           // toggle each source sequentially
           let index = This._toggleIndex++ % paella.dce.sources.length;
           paella.player.videoLoader._data.streams = [paella.dce.sources[index]];
+          This._printResIfHlsLive(paella.player.videoLoader._data.streams);
           // Load with the updated loader data
           paella.player.loadVideo();
-          // reset state
-          This._resetPlayerState();
+          // reset state (if not dce hls live v1)
+          if (!(paella.dce && paella.dce.hlsLiveToggleV1)) {
+            This._resetPlayerState();
+          }
         });
       });
     }
@@ -109,3 +149,4 @@ paella.addPlugin(function () {
     }
   }
 });
+
