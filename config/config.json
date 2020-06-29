@@ -15,6 +15,7 @@
     },
     "profileFrameStrategy": "paella.ProfileFrameStrategy",
     "videoQualityStrategy": "paella.RequestedOrBestFitVideoQualityStrategy",
+    "videoQualityStrategyParams":{ "maxAutoQualityRes":4999 },
     "#DCE reloading video on full screen is problematic with rtmp live streams":"",
     "reloadOnFullscreen": false,
     "methods": [
@@ -35,7 +36,8 @@
           "debug": true
         },
         "iOSMaxStreams": 2,
-        "androidMaxStreams": 2
+        "androidMaxStreams": 2,
+        "initialQualityLevel": 4
        },
        { "factory":"ChromaVideoFactory", "enabled":true },
        { "factory":"WebmVideoFactory", "enabled":true },
@@ -109,8 +111,11 @@
           }
         ],
         "audioTag": {
+        },
+        "videoCanvas": {
+          "*/delivery+360": "video360",
+          "*/delivery+360Theta": "video360Theta"
         }
-
       },
       "//**** Video profile plugins": "",
       "es.upv.paella.singleStreamProfilePlugin": {
@@ -151,13 +156,15 @@
       "edu.harvard.edu.paella.singleMultipleQualitiesPlugin" : {
          "enabled": false,
          "showWidthRes":true,
-         "presenterHasAudioTag":"multiaudio"
+         "presenterHasAudioTag":"multiaudio",
+         "ariaLabel": "Change video quality"
       },
       "edu.harvard.dce.paella.presentationOnlyPlugin": {
          "enabled": false
       },
       "edu.harvard.dce.paella.singleVideoTogglePlugin": {
-         "enabled": true
+         "enabled": true,
+         "ariaLabel": "Switch Videos"
       },
       "edu.harvard.dce.paella.flexSkipPlugin": {
         "enabled": true,
@@ -193,7 +200,8 @@
 
       "es.upv.paella.multipleQualitiesPlugin": {
         "enabled": true,
-        "showWidthRes": true
+        "showWidthRes": true,
+        "minVisibleQuality": 60
       },
       "es.upv.paella.ImageControlPlugin": {
         "enabled": false
@@ -237,7 +245,8 @@
       "es.upv.paella.volumeRangePlugin": {
         "enabled": true,
         "showMasterVolume": true,
-        "showSlaveVolume": false
+        "showSlaveVolume": false,
+        "ariaLabel": "Volume"
       },
       "edu.harvard.dce.paella.heartbeatSender": {
         "enabled": true,
@@ -292,13 +301,22 @@
         "//*** DCE TODO: vet this plugin in a separate release":"",
         "enabled": false
       },
+      "es.upv.paella.timeMarksPlaybackCanvasPlugin": {
+        "enabled": true,
+        "color": "gray"
+      },
+      "es.upv.paella.BufferedPlaybackCanvasPlugin": {
+        "enabled": true,
+        "color": "rgba(0,0,0,0.4)"
+      },
       "es.upv.paella.fullScreenButtonPlugin": {
         "enabled": true,
         "reloadOnFullscreen": {
           "//": "#DCE reloading video on full screen is problematic with rtmp live streams",
           "enabled": false,
           "keepUserSelection": true
-        }
+        },
+        "ariaLabel": "Switch full screen mode"
       },
       "es.upv.paella.extendedProfilesPlugin": {
         "enabled": false,

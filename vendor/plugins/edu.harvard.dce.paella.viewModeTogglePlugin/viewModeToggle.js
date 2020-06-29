@@ -57,7 +57,8 @@ paella.addPlugin(function () {
                 chosenProfile = this._currentPlayerProfile();
                 this.toggleProfileVideos(chosenProfile);
             }
-            base.log.debug("Now triggering event setProfile on '" + chosenProfile + "' toggling video '" + toToggle + "'");
+            // #DCE OPC-455 log
+            base.log.debug(`OPC-455 viewModeTogglePlugin setProfile '${chosenProfile}' on '${toToggle}'`);
             var overlayContainer = paella.player.videoContainer.overlayContainer;
             if (overlayContainer) {
                 overlayContainer.clear();
@@ -77,6 +78,7 @@ paella.addPlugin(function () {
         turnOnVisibility() {
             this.config.visibleOn = undefined;
             this.checkVisibility();
+            base.log.debug(`OPC-455 viewModeTogglePlugin turnOnVisibility, time '${new Date()}'`);
         }
         toggleProfileVideos(profileId) {
             let profile = paella.profiles.getProfile(profileId);
