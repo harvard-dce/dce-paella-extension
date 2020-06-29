@@ -111,8 +111,11 @@
           }
         ],
         "audioTag": {
+        },
+        "videoCanvas": {
+          "*/delivery+360": "video360",
+          "*/delivery+360Theta": "video360Theta"
         }
-
       },
       "//**** Video profile plugins": "",
       "es.upv.paella.singleStreamProfilePlugin": {
