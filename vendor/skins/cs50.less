@@ -88,8 +88,20 @@ img#playerContainer_videoContainer_bkg{
   display: none;
 }
 
+/* Important to override position for cs50 style scrub bar */
 div.timeControl {
   color: #555;
+}
+
+/* Important to override position for cs50 style scrub bar */
+div.timeControl, .playbackBarFull {
+  top: unset !important;
+  position: unset !important;
+}
+
+/* Important to override position for cs50 style scrub bar */
+.playerContainer_controls_playback_playbackBar_canvas {
+  display: none;
 }
 
 div#playerContainer_controls_playback_playbackBar {
