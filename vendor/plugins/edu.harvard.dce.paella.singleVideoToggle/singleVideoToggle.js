@@ -98,30 +98,35 @@ paella.addPlugin(() => {
         paella.dce.videoDataSingle = videoData;
         paella.dce.videoDataSingle.currentTrimmedTimeToSeek = currentTrimmedTimeToSeek;
         paella.dce.videoDataSingle.playbackRate = paella.player.videoContainer.masterVideo().video.playbackRate;
+        // Stop resize until after load to prevent timer
+        paella.pluginManager.doResize = false;
+        base.log.debug("SVG: About to pause video prior tto removing it (1)");
         // pause videos to temporarily stop update timers
         return paella.player.videoContainer.pause();
       }).then(() => {
         // ADD seekloader spinner until new video is loaded
         paella.player.loader.seekload();
-        paella.pluginManager.doResize = false;
+        base.log.debug("SVT: Added loading spinner (2)");
         // Remove the existing video nodes in this promise
         return This._resetVideoNodes();
       }).then(()=> {
+        base.log.debug("SVG: about to set stream other other video (5)");
         paella.player.videoLoader._data.metadata.preview = null;
         // toggle each source sequentially
         let index = This._toggleIndex++ % paella.dce.sources.length;
         paella.player.videoLoader._data.streams = [paella.dce.sources[index]];
-
         This._printResIfHlsLive(paella.player.videoLoader._data.streams);
         // #DCE OPC-552, wait for load()'s' loadComplete event before resetting state
         $(document).bind(paella.events.loadComplete, function (event, params) {
           $(document).unbind(paella.events.loadComplete);
           // reset state (if not dce hls live v1)
+          base.log.debug('SVT: SingleVideoToggle load complete, about to reset state (7)');
           if (!(paella.dce && paella.dce.hlsLiveToggleV1)) {
             This._resetPlayerState();
           }
         });
         // Load with the updated loader data
+        base.log.debug("SVG: about to load video (6)");
         paella.player.loadVideo();
       });
     }
@@ -130,13 +135,20 @@ paella.addPlugin(() => {
       paella.player.videoContainer.seekToTime(paella.dce.videoDataSingle.currentTrimmedTimeToSeek);
       paella.player.videoContainer.setVolume(paella.dce.videoDataSingle.volume);
       paella.player.videoContainer.setPlaybackRate(paella.dce.videoDataSingle.playbackRate);
+      paella.pluginManager.doResize = true;
       // User is required to click play to restart toggled video
+      base.log.debug("SVG: reseting player state (8)");
     }
 
     // in Paella5 & 6, must manually remove nodes before reseting video source data
     // for Paella 6.4.3, turn into promise with unload/destroy on hls object
     _resetVideoNodes () {
       let promise = new Promise((resolve, reject) => {
+
+        // Video container is not ready until the video reloads
+        paella.player.videoContainer._ready = false;
+
+        // remove the nodes of all video wrappers
         for (let i = 0; i < paella.player.videoContainer.videoWrappers.length; i++) {
           let wrapper = paella.player.videoContainer.videoWrappers[i];
           let wrapperNodes =[].concat(wrapper.nodeList);
@@ -145,12 +157,13 @@ paella.addPlugin(() => {
           }
           paella.player.videoContainer.removeNode(wrapper);
           $("#videoPlayerWrapper_0").remove();
-          // because removeNode doesn't remove wrappers
         }
+
         // Call unload and ignore promise rejects for unimplemented.
         paella.player.videoContainer.streamProvider.mainPlayer.unload()
         .catch(err => err)
         .then(() => {
+
           // clear existing stream provider data
           paella.player.videoContainer._streamProvider._mainStream = null;
           paella.player.videoContainer._streamProvider._videoStreams =[];
@@ -160,7 +173,7 @@ paella.addPlugin(() => {
           paella.player.videoContainer._streamProvider._videoPlayers =[];
           paella.player.videoContainer._streamProvider._audioPlayers =[];
           paella.player.videoContainer._streamProvider._players =[];
-          base.log.debug("PO: removed video node");
+          base.log.debug("SVT: removed video node (4)");
           resolve();
         });
       });
