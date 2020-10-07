@@ -33,7 +33,11 @@
           "highBufferWatchdogPeriod": 3,
           "capLevelToPlayerSize": false,
           "dceHideManualQualityChoices": true,
-          "debug": true
+          "debug": true,
+          "testBandwidth" : false,
+          "initialQualityLevel": 4,
+          "startLevel" : 4,
+          "autoStartLoad" : false
         },
         "iOSMaxStreams": 2,
         "androidMaxStreams": 2,
