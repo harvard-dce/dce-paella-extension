@@ -469,9 +469,11 @@ paella.addPlugin(function () {
     doSearch (text) {
       var thisClass = this;
       var c = paella.captions.getActiveCaptions();
-      if (c) {
+      // OPC-630 The c._captions is empty if the file exists but there is no talking in the video
+      // Do not rebuild the body on an empty caption file
+      if (c && c._captions) {
         if (text == "") {
-          thisClass.buildBodyContent(paella.captions.getActiveCaptions()._captions, "list");
+          thisClass.buildBodyContent(c._captions, "list");
         } else {
         // OPC-228 add usertracking to caption term search. Shorten long terms.
         let maxTrackSize = 64;
@@ -523,6 +525,10 @@ paella.addPlugin(function () {
     }
     
     buildBodyContent (obj, type) {
+      // The obj is empty if the transcript file exists but does
+      // not contain text. For example, videos without spoken words.
+      // Don't build body content for an empty transcript.
+      if (!obj) return;
       paella.player.videoContainer.trimming()
       .then((trimming)=>{
       var thisClass = this;
