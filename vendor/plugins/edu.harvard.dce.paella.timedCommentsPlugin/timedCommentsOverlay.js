@@ -49,6 +49,7 @@ paella.addPlugin(function () {
       this.publishCommentButtons = null;
       this.publishCommentisPrivate = null;
       this.canPublishAComment = false;
+      this._trimming = null; // OPC-633 offset annot display and filter by video trim start
       this._shortMonths =[ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       this._curActiveTop = null;
       this._curScrollTop = 0;
@@ -77,7 +78,7 @@ paella.addPlugin(function () {
     getName() {
       return "edu.harvard.dce.paella.timedCommentsOverlayPlugin";
     }
-    
+
     getEvents() {
       // Inserting a new event types
       paella.events.refreshTimedComments = "dce:refreshTimedComments";
@@ -89,17 +90,18 @@ paella.addPlugin(function () {
       this._adminRoles = config.adminRoles;
     }
     setup() {
+      const thisClass = this;
       // custom helper util for username alias create and change
       this._aliasUtil = new paella.TimedCommentsUsernameAlias();
       if (this.config.adminRoles) {
         this._adminRoles = this.config.adminRoles;
       }
     }
-    
+
     onEvent(eventType, params) {
       var thisClass = this;
       switch (eventType) {
-        
+
         case paella.events.play:
         // play means focus is off the comment box so it's ok to scroll
         thisClass._isAutoScroll = true;
@@ -110,7 +112,7 @@ paella.addPlugin(function () {
           });
         }
         break;
-        
+
         case paella.events.timeupdate:
         thisClass.updateCurrentTimeStamp();
         if (thisClass._isActive) {
@@ -119,26 +121,26 @@ paella.addPlugin(function () {
           });
         }
         break;
-        
+
         case paella.events.pause:
         case paella.events.endVideo:
         thisClass._isAutoScroll = false;
         break;
-        
+
         case paella.events.showTimedComments:
         thisClass.loadTimedComments();
         if (paella.player.playing()) {
           thisClass._isAutoScroll = true;
         }
         break;
-        
+
         case paella.events.hideTimedComments:
         thisClass._isActive = false;
         if (thisClass._rootElement) {
           thisClass.unloadTimedComments();
         }
         break;
-        
+
         case paella.events.refreshTimedComments:
         if (thisClass._isActive) {
           thisClass.reloadComments(params.data);
@@ -146,7 +148,7 @@ paella.addPlugin(function () {
       }
       thisClass.lastEvent = eventType;
     }
-    
+
     // This gets the user access roles from Opencast user service
     // Required to determin if user is logged in as admin.
     getUserData() {
@@ -175,7 +177,7 @@ paella.addPlugin(function () {
       });
       return defer;
     }
-    
+
     reloadComments(annotData) {
       var thisClass = this;
       thisClass._curScrollTop = $("#innerAnnotation") ? $("#innerAnnotation").scrollTop(): 0;
@@ -188,14 +190,14 @@ paella.addPlugin(function () {
       }
       thisClass.loadTimedComments(annotData);
     }
-    
+
     unloadTimedComments() {
       var thisClass = this;
       if (thisClass._rootElement) {
         $(thisClass._rootElement).remove();
       }
     }
-    
+
     loadTimedComments(annotData) {
       var thisClass = this;
       if (annotData) {
@@ -209,16 +211,50 @@ paella.addPlugin(function () {
         });
       }
     }
-    
+
+    // #DCE OPC-633 save trim times
+    filterAndSortAnnots() {
+      const thisClass = this;
+      return new Promise((resolve) => {
+        // Get the trim setting once and save to class var.
+        // This cannot be done in init() or setup() because
+        // trim start-end params are parsed after
+        // the control bar plugins ares are already loaded.
+        if (!thisClass._trimming) {
+          paella.player.videoContainer.trimming()
+            .then((trimming)=>{
+              thisClass._trimming = {
+                enabled: trimming.enabled,
+                start: trimming.start,
+                end: trimming.end
+              };
+              thisClass.sortAnnotations();
+              resolve();
+            });
+        } else {
+          thisClass.sortAnnotations();
+          resolve();
+        }
+      });
+    }
+
     loadWithData(data) {
       var thisClass = this;
+      // update set of annots
       thisClass._annotations = data;
-      thisClass.sortAnnotations();
-      
-      paella.player.videoContainer.currentTime().then(function (time) {
-        thisClass.getUserData().then(function (userData) {
-          thisClass.drawTimedComments(time, userData);
-        }).then(function () {
+
+      thisClass.filterAndSortAnnots()
+        .then(() => {
+          // VideoContainer time is pre-trimmed
+          return paella.player.videoContainer.currentTime();
+        })
+        .then((trimmedTime) => {
+          // nested to get time and userdata
+          thisClass.getUserData().then((userData) => {
+              return thisClass.drawTimedComments(trimmedTime, userData);
+          })
+        })
+        .then(() => {
           $("#innerAnnotation").animate({
             scrollTop: thisClass._curScrollTop
           },
@@ -229,21 +265,27 @@ paella.addPlugin(function () {
           thisClass.changeToOptimalVideoProfile(thisClass._optimalProfile);
           thisClass._isActive = true;
         });
-      });
     }
-    
+
     // Sort annotations for display in annotation UI
+    // and filter them, if needed, based on start-end trim time
     sortAnnotations() {
       var thisClass = this;
       var commentList =[];
       var replyList =[];
-      var replyMap = {
-      };
-      
+      var replyMap = {};
+
       if (thisClass._annotations) {
         // DCE modification is that Each comment and reply are in a separate annotation
         // to sort, create a map of comment replies and a separate collection of comment parents
-        thisClass._annotations.forEach(function (annot) {
+        thisClass._annotations.forEach((annot)=> {
+          // Ignore annots that start outside the trim time
+          if(thisClass._trimming.enabled &&
+            (annot.inpoint < thisClass._trimming.start
+              || annot.inpoint > thisClass._trimming.end)){
+            return;
+          }
+          // Divide filtered annots into comments and replies
           var timedComment = annot.value.timedComment;
           if (timedComment.mode == 'comment') {
             commentList.push(annot);
@@ -256,9 +298,9 @@ paella.addPlugin(function () {
             replyMap[annot.value.timedComment.parent] = mapList;
           }
         });
-        
+
         // Sort comments by inpoint, then by annotation date
-        commentList = commentList.sort(function (a, b) {
+        commentList = commentList.sort((a, b) => {
           // First, sort by inpoint (a comment and its replies will have the same inpoint)
           // multiple comments can share the same inpoint
           var ret = a.inpoint - b.inpoint;
@@ -270,9 +312,9 @@ paella.addPlugin(function () {
           var bdate = new Date(b.created).getTime();
           return ((adate > bdate) ? 1: ((adate < bdate) ? -1: 0));
         });
-        
+
         // Sort individual reply groups by annot date
-        commentList.forEach(function (comment) {
+        commentList.forEach((comment) =>  {
           // sort individual reply groups
           var mapList = replyMap[comment.annotationId];
           if (mapList) {
@@ -286,11 +328,11 @@ paella.addPlugin(function () {
             replyList = replyList.concat(mapList);
           }
         });
-        // merge back together into the single list
+        // Finally, merge back together into the single list
         thisClass._annotations = thisClass.mergeCommentsReplies(commentList, replyList);
       }
     }
-    
+
     // add the sorted replies in with the parent comments
     mergeCommentsReplies(comments, replies) {
       var combined =[];
@@ -305,7 +347,7 @@ paella.addPlugin(function () {
       }
       return combined;
     }
-    
+
     changeToOptimalVideoProfile(profile) {
       if (paella.Profiles && paella.Profiles.profileList && paella.Profiles.profileList[profile]) {
         paella.events.trigger(
@@ -314,11 +356,14 @@ paella.addPlugin(function () {
         });
       }
     }
-    
-    drawTimedComments(time, userData) {
+
+    /**
+     * @param [int] time, the videocontainer time (post-trim)
+     */
+    drawTimedComments(trimTime, userData) {
       var thisClass = this;
       var defer = new $.Deferred();
-      
+
       //Difficult to stop player clickthrough in overlayContainer, so moving it up a level to playerContainer
       //var overlayContainer = $("#overlayContainer");
       var overlayContainer = $('#playerContainer');
@@ -326,22 +371,22 @@ paella.addPlugin(function () {
         base.log.debug("TC Unable to find overlayContainer. Cannot show comments.");
         return;
       }
-      
+
       if (thisClass._rootElement) {
         $(thisClass._rootElement).empty();
       } else {
         thisClass._rootElement = document.createElement("div");
       }
-      
+
       thisClass._rootElement.className = 'timedComments';
       thisClass._rootElement.id = 'TimedCommentPlugin_Comments';
-      
+
       // The first child is the innerAnnotation content body if there are annotations already there
       if (thisClass._annotations) {
         var innerAnnots = thisClass.buildInnerAnnotationElement(thisClass._annotations);
         $(thisClass._rootElement).append(innerAnnots);
       }
-      
+
       // The next child is the new comment input form
       var newCommentForm = $(thisClass.tc_new_comment);
       $(thisClass._rootElement).append(newCommentForm);
@@ -352,18 +397,18 @@ paella.addPlugin(function () {
       $(commentTextArea).attr('id', commentAreaId);
       thisClass.publishCommentTextArea = commentTextArea;
       thisClass.publishCommentisPrivate = commentisPrivate;
-      
+
       // append all to the overlay container
       overlayContainer.append(thisClass._rootElement);
-      
+
       // update the comment time
-      var currentTime = Math.floor(time);
+      var currentTime = Math.floor(trimTime);
       if ($('#tc_current_timestamp').length > 0) {
         $('#tc_current_timestamp').html(paella.utils.timeParse.secondsToTime(currentTime));
       } else {
         base.log.debug("TC Unable to find tc_current_timestamp. Cannot set current time for new comment.");
       }
-      
+
       // movable & resizable comments box
       $('#TimedCommentPlugin_Comments').draggable({
         cancel: "#dceAnnotUserPseudoName, #innerAnnotation, .tc_new_comment"
@@ -372,7 +417,7 @@ paella.addPlugin(function () {
         minWidth: 200,
         minHeight: 200
       });
-      
+
       // Admins have a special view
       if (thisClass.hasAdminRole(userData.roles)) {
         // Disable input if user is logged in as admin
@@ -390,7 +435,7 @@ paella.addPlugin(function () {
           }
         });
       }
-      
+
       // Halt comment refreshes when typing a comment or repy
       $('.tc_reply_textarea, .tc_comment_textarea, .tc_admin_edit, #tc_alias_input').focusin(function () {
         thisClass._isActive = false;
@@ -420,7 +465,7 @@ paella.addPlugin(function () {
         }
         event.stopImmediatePropagation();
       });
-      
+
       // prevent space bar event trickle pause/play & use enter for submit (short comments)
       $('.tc_reply_textarea, .tc_comment_textarea, #tc_alias_input, #dceAnnotUserPseudoName').keyup(function (event) {
         var charCode = (typeof event.which == "number") ? event.which: event.keyCode;
@@ -441,7 +486,7 @@ paella.addPlugin(function () {
       $('#TimedCommentPlugin_Comments').click(function (event) {
         event.stopImmediatePropagation();
       });
-      
+
       // Allow user to scroll when moues over timed contents area, i.e. stop autoscoll
       $('#TimedCommentPlugin_Comments').on({
         mouseenter(event) {
@@ -456,24 +501,24 @@ paella.addPlugin(function () {
       }
       return defer.resolve();
     }
-    
+
     // builds the series of timestamp blocks (blocks of 1 comment & its replies)
     buildInnerAnnotationElement(comments) {
-      
+
       const thisClass = this;
       $(thisClass.innerContainer).empty();
-      
+
       let innerAnnotation = document.createElement('div');
       innerAnnotation.id = "innerAnnotation";
       thisClass.innerContainer = innerAnnotation;
       var timeBlockcount = 0;
-      
+
       let newEl;
       var commentBlock;
       var previousParentId;
       // hold current time stamp element
       var timeStampBlockEl;
-      
+
       // Just so that we don't repeat code...
       function addReplyBox () {
         // Add the reply box at the end of the block containing comment plus its replies
@@ -487,15 +532,18 @@ paella.addPlugin(function () {
         timeStampBlockEl.appendChild(commentBlock);
         innerAnnotation.appendChild(timeStampBlockEl);
       }
-      
+
       comments.forEach(function (l) {
-        var parsedComments = l.value;
+        const parsedComments = l.value;
+        // Bump both inpoint and outpoint down to match offset of trim start
+        const inAdjusted = l.inpoint - (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
+        const outAdjusted = l.outpoint - (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
         if (parsedComments && (typeof parsedComments !== 'object')) {
           parsedComments = JSON.parse(parsedComments);
         }
         if (parsedComments[ "timedComment"]) {
           var comment = parsedComments[ "timedComment"];
-          
+
           if (comment.mode == "comment") {
             // This is the comment
             if (previousParentId) {
@@ -506,16 +554,16 @@ paella.addPlugin(function () {
             base.log.debug("creating comment block for " + l.annotationId);
             timeStampBlockEl = document.createElement('div');
             timeStampBlockEl.className = "tc_timestamp_block";
-            timeStampBlockEl.setAttribute('data-sec-begin', l.inpoint);
-            timeStampBlockEl.setAttribute('data-sec-end', l.outpoint);
+            timeStampBlockEl.setAttribute('data-sec-begin', inAdjusted);
+            timeStampBlockEl.setAttribute('data-sec-end', outAdjusted);
             timeStampBlockEl.setAttribute('data-sec-id', l.annotationId);
             timeStampBlockEl.id = 'TimedCommentPlugin_Comments_' + timeBlockcount;
-            
+
             // The innerAnnotation's first child is the timestamp
             var timeStampEl = document.createElement('div');
             timeStampEl.className = "tc_timestamp";
-            timeStampEl.setAttribute('data-sec-begin-button', l.inpoint);
-            var timeStampText = paella.utils.timeParse.secondsToTime(l.inpoint);
+            timeStampEl.setAttribute('data-sec-begin-button', inAdjusted);
+            var timeStampText = paella.utils.timeParse.secondsToTime(inAdjusted);
             timeStampEl.innerHTML = timeStampText;
             timeStampBlockEl.appendChild(timeStampEl);
             // jump to time on click on just the timestamp div
@@ -523,11 +571,11 @@ paella.addPlugin(function () {
               var secBegin = $(this).attr("data-sec-begin-button");
               paella.player.videoContainer.seekToTime(parseInt(secBegin));
             });
-            
+
             commentBlock = document.createElement("div");
             commentBlock.className = "tc_comment_block";
             commentBlock.setAttribute('data-parent-id', l.annotationId);
-            commentBlock.setAttribute('data-inpoint', l.inpoint);
+            commentBlock.setAttribute('data-inpoint', inAdjusted);
             commentBlock.setAttribute('data-private', l.isPrivate);
             // create the comment
             newEl = $(thisClass.tc_comment);
@@ -543,15 +591,15 @@ paella.addPlugin(function () {
           $(commentBlock).append(newEl);
         }
       });
-      
+
       if (previousParentId) {
         // Add last reply box
         addReplyBox();
       }
-      
+
       return innerAnnotation;
     }
-    
+
     onTextAreaSubmit(textareaDiv) {
       var thisClass = this;
       $(textareaDiv).addClass("submit-text-div");
@@ -573,7 +621,7 @@ paella.addPlugin(function () {
         });
       }
     }
-    
+
     submitSwitch() {
       var textareaDiv = $(".submit-text-div");
       var thisClass = this;
@@ -585,7 +633,7 @@ paella.addPlugin(function () {
       }
       $(textareaDiv).removeClass("submit-text-div");
     }
-    
+
     updateAnnot(textareaDiv) {
       var thisClass = this;
       var confirmText = 'Ok to make update: "' + $(textareaDiv).text() + '" ?';
@@ -598,7 +646,7 @@ paella.addPlugin(function () {
         thisClass.reloadComments();
       }
     }
-    
+
     updateCurrentTimeStamp() {
       // updated to use new promise for current time
       paella.player.videoContainer.currentTime().then(function (time) {
@@ -609,14 +657,14 @@ paella.addPlugin(function () {
         }
       });
     }
-    
+
     scrollTimedComments(doScroll, time) {
       var thisClass = this;
       var currentTime = Math.floor(time);
       // no need to update anything else if no comments or scrolling is off
       if ($(".tc_timestamp_block").length < 1 || $("#innerAnnotation").hasClass('scrolling')) return;
       var newTopActive = null, lastBeforeTime = null, lastAfterTime = null;
-      
+
       $(".tc_timestamp_block").filter(function () {
         if ($(this).attr("data-sec-begin") <= currentTime && $(this).attr("data-sec-end") >= currentTime) {
           if (newTopActive === null) {
@@ -634,7 +682,7 @@ paella.addPlugin(function () {
           lastAfterTime = this;
         }
       });
-      
+
       if (newTopActive === null && (lastBeforeTime || lastAfterTime)) {
         if (lastBeforeTime) {
           newTopActive = lastBeforeTime;
@@ -642,7 +690,7 @@ paella.addPlugin(function () {
           newTopActive = lastAfterTime;
         }
       }
-      
+
       if ((newTopActive != thisClass._curActiveTop) && doScroll) {
         thisClass._curActiveTop = newTopActive;
         base.log.debug("TC, going to scroll element " + $(newTopActive).attr('id') + " currently at " + $(newTopActive).position().top + " from top, scroll positon is currently at " + $("#innerAnnotation").scrollTop());
@@ -657,16 +705,16 @@ paella.addPlugin(function () {
       }
       this._curScrollTop = $("#innerAnnotation").scrollTop();
     }
-    
+
     // new comment creates a new annotation entry
     editComment(textArea) {
       var thisClass = this;
       thisClass._curScrollTop = $("#innerAnnotation").scrollTop();
       var txtValue = paella.AntiXSS.htmlEscape($(textArea).text());
       var id = $(textArea).parent().attr("data-annot-id");
-      
+
       var commentValue = null;
-      
+
       $(thisClass._annotations).each(function (index, annot) {
         if (annot.annotationId.toString() === id.toString()) {
           commentValue = annot.value;
@@ -675,9 +723,9 @@ paella.addPlugin(function () {
           }
         }
       });
-      
+
       commentValue.timedComment.value = txtValue;
-      
+
       paella.data.write('timedComments', {
         id: paella.initDelegate.getId(),
         update: true,
@@ -688,14 +736,14 @@ paella.addPlugin(function () {
         if (status) thisClass.reloadComments();
       });
     }
-    
+
     // new comment creates a new annotation entry
     addComment() {
       var thisClass = this;
       thisClass._curScrollTop = $("#innerAnnotation").scrollTop();
       var txtValue = paella.AntiXSS.htmlEscape(thisClass.publishCommentTextArea.val());
       var isPrivate = thisClass.publishCommentisPrivate.val() === true ? true: false;
-      
+
       thisClass.getUserData().then(function (user) {
         var newComment = {};
         newComment.userName = user.username;
@@ -706,7 +754,9 @@ paella.addPlugin(function () {
           timedComment: newComment
         };
         paella.player.videoContainer.currentTime().then(function (time) {
-          thisClass.writeComment(data, time, isPrivate);
+          // Adjust time back up to the untrimmed time
+          const timeReAdjusted = time + (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
+          thisClass.writeComment(data, timeReAdjusted, isPrivate);
           // OPC-228 add usertracking to info on quality selection
           paella.userTracking.log("paella:social:addcomment");
         });
@@ -714,34 +764,40 @@ paella.addPlugin(function () {
       // else log issue
       base.log.debug("TC, unable to retrieve user information, cannot write comment"));
     }
-    
+
+    /**
+     * @param {Object} data, the comment
+     * @param {int} inPoint expect to be real time, not trimed time
+     * @param {boolean} isPrivate, always false right now
+     */
     writeComment(data, inPoint, isPrivate) {
       var thisClass = this;
-      paella.player.videoContainer.currentTime().then(function (time) {
-        paella.data.write('timedComments', {
+      paella.data.write('timedComments', {
           id: paella.initDelegate.getId(),
           inpoint: Math.floor(inPoint),
           isprivate: isPrivate
         },
         data, function (response, status) {
           if (status) thisClass.reloadComments();
-        });
-      });
+        }
+      );
     }
-    
+
     //#DCE Rute 7/21: adding a reply creates a new annotation entry. The inpoint is the same as the
     // parent annotation to help sorting.
     addReply(textArea) {
       var thisClass = this;
       thisClass._curScrollTop = $("#innerAnnotation").scrollTop();
       var txtValue = paella.AntiXSS.htmlEscape($(textArea).val());
-      
+
       // retrieve parent annotation data from the encompasing comment block
       var commentBlock = $(textArea).closest(".tc_comment_block");
       var parentAnnotId = commentBlock.attr("data-parent-id");
       var isPrivate = commentBlock.attr("data-private");
       var inPoint = commentBlock.attr("data-inpoint");
-      
+      // Add thee start offset back on to get the real time of the inpoint
+      var inPointReadjusted = inPoint + (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
+
       // create the new reply
       thisClass.getUserData().then(function (user) {
         var newComment = {
@@ -754,19 +810,19 @@ paella.addPlugin(function () {
         var data = {
           timedComment: newComment
         };
-        thisClass.writeComment(data, inPoint, isPrivate);
+        thisClass.writeComment(data, inPointReadjusted, isPrivate);
         // OPC-228 add usertracking to info on quality selection
         paella.userTracking.log("paella:social:addreply");
       },
       // else log issue
       base.log.debug("TC, unable to retrieve user information, cannot write comment"));
     }
-    
+
     hideContent() {
       var thisClass = this;
       $(thisClass.container).hide();
     }
-    
+
     //"created": "2017-01-26T14:32:52-05:00"
     getFriendlyDate(dateString) {
       var result;
@@ -788,14 +844,14 @@ paella.addPlugin(function () {
       }
       return result;
     }
-    
+
     getDomFromHTMLString(template) {
       var thisClass = this;
       parser = new DOMParser();
       return parser.parseFromString(template, "text/html");
       // returns a HTMLDocument, which also is a Document.
     }
-    
+
     hasAdminRole(userRoles) {
       if (userRoles == null || ! Array.isArray(this._adminRoles)) return false;
       // Protect if Opencast sends a single value instead of an array (as it does in mp json)
