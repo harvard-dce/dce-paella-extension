@@ -795,8 +795,8 @@ paella.addPlugin(function () {
       var parentAnnotId = commentBlock.attr("data-parent-id");
       var isPrivate = commentBlock.attr("data-private");
       var inPoint = commentBlock.attr("data-inpoint");
-      // Add thee start offset back on to get the real time of the inpoint
-      var inPointReadjusted = inPoint + (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
+      // Add the start offset back on to get the real time of the inpoint
+      var inPointReadjusted = parseInt(inPoint) + (thisClass._trimming.enabled ? thisClass._trimming.start : 0);
 
       // create the new reply
       thisClass.getUserData().then(function (user) {
