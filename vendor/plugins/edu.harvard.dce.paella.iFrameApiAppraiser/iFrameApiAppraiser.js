@@ -32,7 +32,7 @@ paella.addPlugin(function () {
     /**
       * @inheritdoc
       * Get the name of the Paella plugin
-      * @param {requestCallback} onSuccess, The callback that handles response
+      * @param {requestCallback} onSuccess - The callback that handles response
       */
     checkEnabled (onSuccess) {
       // This iFrame prefix is used by the iFrameEmbedApi
@@ -68,8 +68,8 @@ paella.addPlugin(function () {
       * @inheritdoc
       * The handle this Paella event driven plugin is
       * called when an event fires.
-      * @param {string} eventType, the event that was fired
-      * @param {object} [params], a set of params associated to the event
+      * @param {string} eventType - the event that was fired
+      * @param {object} [params] - a set of params associated to the event
       */
     onEvent(eventType,params) {
       var thisClass = this;
@@ -94,8 +94,8 @@ paella.addPlugin(function () {
 
     /**
      * Helper to consruct and send the event
-     * @param {string} eventType, the name of the event
-     * @param {string} [value], a value associated to the event
+     * @param {string} eventType - the name of the event
+     * @param {string} [value] - a value associated to the event
      */
     sendMessageToEmbedApi(eventType, value) {
       const iFrameName = window.name;
