@@ -13,7 +13,8 @@ paella.addPlugin(function () {
     constructor () {
       super();
       // This bind must happen early to catch the videoReady event
-      paella.events.bind(paella.events.videoReady,
+      paella.events.bind(
+        paella.events.videoReady,
         () => {
           this.sendMessageToEmbedApi(paella.events.videoReady);
         }
@@ -41,8 +42,7 @@ paella.addPlugin(function () {
       // Enable when player is embedded, and embed iFrame has target prefix
       onSuccess(
         (window.self !== window.top)
-        &&
-        (window.name && window.name.startsWith(iFramePrefix))
+        && (window.name && window.name.startsWith(iFramePrefix))
       );
     }
 
@@ -52,7 +52,7 @@ paella.addPlugin(function () {
       * @return an array of events
       */
     getEvents() {
-      return[
+      return [
         paella.events.play,
         paella.events.pause,
         paella.events.loadComplete,
@@ -71,8 +71,7 @@ paella.addPlugin(function () {
       * @param {string} eventType - the event that was fired
       * @param {object} [params] - a set of params associated to the event
       */
-    onEvent(eventType,params) {
-      var thisClass = this;
+    onEvent(eventType, params) {
       switch (eventType) {
         case paella.events.timeupdate:
           this.sendMessageToEmbedApi(eventType, params.currentTime);
@@ -89,7 +88,7 @@ paella.addPlugin(function () {
         default:
           base.log.debug('IFrameApiAppraiser: Unsupported event ', eventType);
       }
-      thisClass.lastEvent = eventType;
+      this.lastEvent = eventType;
     }
 
     /**
