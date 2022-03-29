@@ -71,7 +71,7 @@ paella.addPlugin(() => {
 
     checkEnabled (onSuccess) {
       // Enable for iOS (not Android) TODO: test with Safari on Android?
-      let enabled = base.userAgent.system.iOS && paella.dce && paella.dce.sources && paella.dce.sources.length > 1 && ! paella.dce.blankAudio;
+      let enabled = paella.utils.userAgent.system.iOS && paella.dce && paella.dce.sources && paella.dce.sources.length > 1 && ! paella.dce.blankAudio;
       // #DCE OPC-497 also enable for HLS Live when 2 seperate m3u8 passed with different res for the same video, instead of one master m3u8 containing 2 res.
       if (paella.dce && paella.dce.hlsLiveToggleV1) {
         this._printResIfHlsLive(paella.player.videoLoader._data.streams);

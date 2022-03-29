@@ -16,7 +16,7 @@ paella.addPlugin(function () {
     }
     checkEnabled(onSuccess) {
       // Only for Safari
-      if (base.userAgent.browser.Safari) {
+      if (paella.utils.userAgent.browser.Safari) {
         onSuccess(true);
       } else {
         onSuccess(false);
@@ -34,7 +34,7 @@ paella.addPlugin(function () {
       // Do the magic pause!
       setTimeout(function () {
         self.resetMaxHeight(maxHeightOrig);
-        if (base.userAgent.system.iOS) { // Mitigate missing fullScreen icon on exiting full screen in Safari iOS
+        if (paella.utils.userAgent.system.iOS) { // Mitigate missing fullScreen icon on exiting full screen in Safari iOS
           self.retryOnExitFullScreen();
         }
       },

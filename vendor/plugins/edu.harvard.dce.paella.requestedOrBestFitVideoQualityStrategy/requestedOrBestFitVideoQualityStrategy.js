@@ -30,9 +30,9 @@ class RequestedOrBestFitVideoQualityStrategy extends paella.VideoQualityStrategy
   getQualityIndex (source) {
     var index = source.length - 1;
     // retrieve URL param, if it was passed
-    var requestedResolution = base.parameters. get ('res');
+    var requestedResolution = paella.utils.parameters. get ('res');
     if (! requestedResolution) {
-      requestedResolution = base.cookies. get ('lastResolution');
+      requestedResolution = paella.utils.cookies. get ('lastResolution');
     }
     // Use current quality index from custom param (used for source toggle)
     var currentQualityIndex = paella.dce.currentQuality;

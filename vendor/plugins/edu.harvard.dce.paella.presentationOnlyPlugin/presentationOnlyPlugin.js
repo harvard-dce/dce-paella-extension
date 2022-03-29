@@ -109,7 +109,7 @@ paella.addPlugin(function () {
         return false;
       }
       paella.log.debug("PO: first time load: correcting monostream load on mutlivideo pub.");
-      this._currentProfile = base.cookies. get ('lastProfile');
+      this._currentProfile = paella.utils.cookies. get ('lastProfile');
       if ((this._presentationOnlyProfile === this._currentProfile) && ! paella.player.videoContainer.isMonostream) {
         this.isCurrentlySingleStream = paella.player.videoContainer.isMonostream;
         if (paella.player.config.defaultProfile) {
@@ -218,11 +218,11 @@ paella.addPlugin(function () {
           self._removeVideoNodes();
           if (! wasSingle) {
             // set the cookie to monostream so setStreamData correctly sets single stream initialization
-            base.cookies. set ("lastProfile", self._presentationOnlyProfile);
+            paella.utils.cookies. set ("lastProfile", self._presentationOnlyProfile);
             self._lastMultiProfile = paella.player.videoContainer.getCurrentProfileName();
           } else {
             // set the to the default profile
-            base.cookies. set ("lastProfile", self._lastMultiProfile);
+            paella.utils.cookies. set ("lastProfile", self._lastMultiProfile);
           }
           if (sources !== null) {
             paella.log.debug("PO: Before videoContainer.setStreamData's sources to reload video container(s) " + sources);

@@ -241,7 +241,7 @@ paella.addPlugin(function () {
     
     action () {
       var self = this;
-      self._browserLang = base.dictionary.currentLanguage();
+      self._browserLang = paella.utils.dictionary.currentLanguage();
       self._autoScroll = true;
       
       switch (self._open) {
@@ -368,7 +368,7 @@ paella.addPlugin(function () {
         if (thisClass._searchTimer != null) {
           thisClass._searchTimer.cancel();
         }
-        thisClass._searchTimer = new base.Timer(function (timer) {
+        thisClass._searchTimer = new paella.utils.Timer(function (timer) {
           thisClass.doSearch(text);
         },
         thisClass._searchTimerTime);

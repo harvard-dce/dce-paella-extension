@@ -132,7 +132,7 @@ paella.addPlugin(function () {
           sender: this
         });
       }
-      thisClass.commentHeatmapTimer = new base.Timer(function (timer) {
+      thisClass.commentHeatmapTimer = new paella.utils.Timer(function (timer) {
         thisClass.loadcommentHeatmap(true);
       },
       5000);

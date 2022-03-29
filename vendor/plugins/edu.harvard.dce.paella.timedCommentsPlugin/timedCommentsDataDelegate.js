@@ -7,7 +7,7 @@ paella.addDataDelegate("timedComments",() => {
     // #DCE MATT-2245 Get the user's annotation name
     getMyPseudoName (context, params, onSuccess) {
       var mpId = params.id;
-      base.ajax. get ({
+      paella.utils.ajax. get ({
         url: '/annotation/property', params: {
           mediaPackageId: mpId,
           type: "paella/" + context,
@@ -30,7 +30,7 @@ paella.addDataDelegate("timedComments",() => {
     setMyPseudoName (context, params, onSuccess) {
       var mpId = params.id;
       var userName = params.newPseudoName;
-      base.ajax.post({
+      paella.utils.ajax.post({
         url: '/annotation/property', params: {
           mediaPackageId: mpId,
           propertyValue: userName,
@@ -77,7 +77,7 @@ paella.addDataDelegate("timedComments",() => {
     }
     
     isCanAnnotate (context, episodeId, onSuccess) {
-      base.ajax. get ({
+      paella.utils.ajax. get ({
         url: '/annotation/canAnnotate', params: {
           mediaPackageId: episodeId,
           type: "paella/" + context
@@ -94,7 +94,7 @@ paella.addDataDelegate("timedComments",() => {
     
     getAnnotations (context, episodeId, ifModifiedByDate, onSuccess) {
       var commentResultsLimit = 30000; //set to large limit, default is 10
-      base.ajax. get ({
+      paella.utils.ajax. get ({
         url: '/annotation/annotations.json', params: {
           limit: commentResultsLimit,
           episode: episodeId,
@@ -149,7 +149,7 @@ paella.addDataDelegate("timedComments",() => {
       var isprivate = params.isprivate;
       if (typeof (value) == 'object') value = JSON.stringify(value);
       
-      base.ajax.put({
+      paella.utils.ajax.put({
         url: '/annotation/',
         params: {
           episode: episodeId,
@@ -178,7 +178,7 @@ paella.addDataDelegate("timedComments",() => {
       var annotationId = params.annotationId;
       if (typeof (value) == 'object') value = JSON.stringify(value);
       
-      base.ajax.put({
+      paella.utils.ajax.put({
         url: '/annotation/' + annotationId, params: {
           value: value
         }
@@ -198,7 +198,7 @@ paella.addDataDelegate("timedComments",() => {
     remove (context, params, onSuccess) {
       var episodeId = params.id;
       
-      base.ajax. get ({
+      paella.utils.ajax. get ({
         url: '/annotation/annotations.json', params: {
           episode: episodeId, type: "paella/" + context
         }
@@ -209,7 +209,7 @@ paella.addDataDelegate("timedComments",() => {
           if (!(annotations instanceof Array)) {
             annotations =[annotations];
           }
-          var asyncLoader = new base.AsyncLoader();
+          var asyncLoader = new paella.utils.AsyncLoader()();
           for (var i = 0; i < annotations.length;++ i) {
             var annotationId = data.annotations.annotation.annotationId;
             asyncLoader.addCallback(new paella.JSONCallback({

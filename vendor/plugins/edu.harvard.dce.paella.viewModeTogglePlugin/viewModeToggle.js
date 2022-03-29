@@ -66,7 +66,7 @@ paella.addPlugin(function () {
             paella.player.setProfile(chosenProfile);
         }
         checkEnabled (onSuccess) {
-            onSuccess(! paella.player.videoContainer.isMonostream && !base.userAgent.system.iOS );
+            onSuccess(! paella.player.videoContainer.isMonostream && !paella.utils.userAgent.system.iOS );
         }
         // called by Mutli-Single view (presentationOnlyPlugin)
         turnOffVisibility() {
