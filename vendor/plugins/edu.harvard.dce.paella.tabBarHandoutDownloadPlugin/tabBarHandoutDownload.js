@@ -87,7 +87,7 @@ paella.addPlugin(function () {
       // in case it sends an attachment mimetype
       var mimetype = '';
       if (attachment.mimetype) {
-        text += ' <span class="handoutLinkText MIMEType">[' + paella.dictionary.translate(attachment.mimetype) + ']' + '</span>';
+        text += ' <span class="handoutLinkText MIMEType">[' + paella.utils.dictionary.translate(attachment.mimetype) + ']' + '</span>';
       }
       return text;
     }

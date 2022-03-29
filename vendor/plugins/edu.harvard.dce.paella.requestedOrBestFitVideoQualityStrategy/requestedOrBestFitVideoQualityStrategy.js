@@ -37,7 +37,7 @@ class RequestedOrBestFitVideoQualityStrategy extends paella.VideoQualityStrategy
     // Use current quality index from custom param (used for source toggle)
     var currentQualityIndex = paella.dce.currentQuality;
     if ((currentQualityIndex > -1) && (currentQualityIndex < source.length)) {
-      base.log.debug("returning currentQualityIndex" + currentQualityIndex);
+      paella.log.debug("returning currentQualityIndex" + currentQualityIndex);
       return currentQualityIndex;
     }
     if (source.length > 0) {

@@ -35,7 +35,7 @@ paella.addPlugin(function () {
       onSuccess(true);
     }
     getDefaultToolTip () {
-      return paella.dictionary.translate("Information");
+      return paella.utils.dictionary.translate("Information");
     }
     getButtonType () {
       return paella.ButtonPlugin.type.popUpButton;

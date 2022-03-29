@@ -117,7 +117,7 @@ paella.addDataDelegate("timedComments",() => {
             value = JSON.parse(annotations);
           }
           catch (err) {
-            base.log.debug("TC Error " + err + " unable to json parse " + annotations);
+            paella.log.debug("TC Error " + err + " unable to json parse " + annotations);
           }
           // Transform stringfied value into json object
           annotations = annotations.map(function (obj) {
@@ -127,7 +127,7 @@ paella.addDataDelegate("timedComments",() => {
                 rObj.value = JSON.parse(obj.value);
               }
               catch (err) {
-                base.log.debug("TC Error " + err + " unable to json parse " + obj.value);
+                paella.log.debug("TC Error " + err + " unable to json parse " + obj.value);
               }
             }
             return rObj;

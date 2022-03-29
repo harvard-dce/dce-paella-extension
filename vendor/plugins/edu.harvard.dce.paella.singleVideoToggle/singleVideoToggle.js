@@ -100,17 +100,17 @@ paella.addPlugin(() => {
         paella.dce.videoDataSingle.playbackRate = paella.player.videoContainer.masterVideo().video.playbackRate;
         // Stop resize until after load to prevent timer
         paella.pluginManager.doResize = false;
-        base.log.debug("SVG: About to pause video prior tto removing it (1)");
+        paella.log.debug("SVG: About to pause video prior tto removing it (1)");
         // pause videos to temporarily stop update timers
         return paella.player.videoContainer.pause();
       }).then(() => {
         // ADD seekloader spinner until new video is loaded
         paella.player.loader.seekload();
-        base.log.debug("SVT: Added loading spinner (2)");
+        paella.log.debug("SVT: Added loading spinner (2)");
         // Remove the existing video nodes in this promise
         return This._resetVideoNodes();
       }).then(()=> {
-        base.log.debug("SVG: about to set stream other other video (5)");
+        paella.log.debug("SVG: about to set stream other other video (5)");
         paella.player.videoLoader._data.metadata.preview = null;
         // toggle each source sequentially
         let index = This._toggleIndex++ % paella.dce.sources.length;
@@ -120,13 +120,13 @@ paella.addPlugin(() => {
         $(document).bind(paella.events.loadComplete, function (event, params) {
           $(document).unbind(paella.events.loadComplete);
           // reset state (if not dce hls live v1)
-          base.log.debug('SVT: SingleVideoToggle load complete, about to reset state (7)');
+          paella.log.debug('SVT: SingleVideoToggle load complete, about to reset state (7)');
           if (!(paella.dce && paella.dce.hlsLiveToggleV1)) {
             This._resetPlayerState();
           }
         });
         // Load with the updated loader data
-        base.log.debug("SVG: about to load video (6)");
+        paella.log.debug("SVG: about to load video (6)");
         paella.player.loadVideo();
       });
     }
@@ -137,7 +137,7 @@ paella.addPlugin(() => {
       paella.player.videoContainer.setPlaybackRate(paella.dce.videoDataSingle.playbackRate);
       paella.pluginManager.doResize = true;
       // User is required to click play to restart toggled video
-      base.log.debug("SVG: reseting player state (8)");
+      paella.log.debug("SVG: reseting player state (8)");
     }
 
     // in Paella5 & 6, must manually remove nodes before reseting video source data
@@ -173,7 +173,7 @@ paella.addPlugin(() => {
           paella.player.videoContainer._streamProvider._videoPlayers =[];
           paella.player.videoContainer._streamProvider._audioPlayers =[];
           paella.player.videoContainer._streamProvider._players =[];
-          base.log.debug("SVT: removed video node (4)");
+          paella.log.debug("SVT: removed video node (4)");
           resolve();
         });
       });

@@ -26,12 +26,12 @@ class TimedCommentsUsernameAlias {
       question: 'getMyPseudoName'
     },
     function (data) {
-      base.log.debug("TC user's pseuduo name " + data);
+      paella.log.debug("TC user's pseuduo name " + data);
       thisClass._currentPseudoName = data;
       defer.resolve(data);
     },
     function () {
-      base.log.debug("TC ERROR getting user's pseuduo name -1.");
+      paella.log.debug("TC ERROR getting user's pseuduo name -1.");
       defer.reject();
     });
     return defer;
@@ -40,7 +40,7 @@ class TimedCommentsUsernameAlias {
   setPseudoName (newPseudoName, pseudoNameInputElem) {
     var thisClass = this;
     var defer = new $.Deferred();
-    base.log.debug("TC about to set pseuduo name " + newPseudoName);
+    paella.log.debug("TC about to set pseuduo name " + newPseudoName);
     paella.data.write('timedComments', {
       id: paella.initDelegate.getId(),
       newPseudoName: newPseudoName
@@ -52,7 +52,7 @@ class TimedCommentsUsernameAlias {
         $(pseudoNameInputElem).attr('placeholder', 'Alias "' + newPseudoName + '" is already taken, try again or leave blank');
         defer.reject(returnCode);
       } else if (isSuccess) {
-        base.log.debug("TC user's pseuduo name " + data);
+        paella.log.debug("TC user's pseuduo name " + data);
         thisClass._currentPseudoName = data;
         defer.resolve(data);
       } else {
@@ -77,18 +77,18 @@ class TimedCommentsUsernameAlias {
         var alias = $('#tc_alias_input').val();
         if (alias && alias !== null) {
           thisClass.setPseudoName(alias, $('#tc_alias_input')).then(function () {
-            base.log.debug("TC Successfully set a new pseuduo name." + alias);
+            paella.log.debug("TC Successfully set a new pseuduo name." + alias);
             hostClass.submitSwitch();
             hostClass._isActive = true;
             paella.keyManager.enabled = true;
             return false;
           }).fail(function (reason) {
-            base.log.debug('TC The set pseudoname promise is rejected: ' + reason);
+            paella.log.debug('TC The set pseudoname promise is rejected: ' + reason);
             thisClass.updatePseudoName(alias);
             return false;
           });
         } else {
-          base.log.debug("TC Letting system set a default pseuduo name." + alias);
+          paella.log.debug("TC Letting system set a default pseuduo name." + alias);
           hostClass._isActive = true;
           paella.keyManager.enabled = true;
           hostClass.submitSwitch();
@@ -107,13 +107,13 @@ class TimedCommentsUsernameAlias {
             $("#dialog-form-alias").dialog("close");
           }).fail(function (reason) {
             // For user to make another pseudoname choice or cancel
-            base.log.debug('TC The set pseudoname ' + value + ' is rejected: ' + reason);
+            paella.log.debug('TC The set pseudoname ' + value + ' is rejected: ' + reason);
             hostClass._isActive = false;
             thisClass.updatePseudoName(value);
             return false;
           });
         } else {
-          base.log.debug("TC not changing custom alias");
+          paella.log.debug("TC not changing custom alias");
           // Restart data refresh
           hostClass._isActive = true;
           paella.keyManager.enabled = true;

@@ -74,10 +74,10 @@ paella.addPlugin(function () {
       } else if (isSingle && data.type === paella.plugins.singleMultipleQualitiesPlugin.multiStreamLabel) {
         thisClass._toggleSingleToMultiProfile(data);
       } else if (data.label === thisClass._currentQuality) {
-        base.log.debug("PO: no work needed, same quality " + data.label + ", reso:" + data.reso + ", reso2: " + data.reso2);
+        paella.log.debug("PO: no work needed, same quality " + data.label + ", reso:" + data.reso + ", reso2: " + data.reso2);
         paella.events.trigger(paella.events.donePresenterOnlyToggle);
       } else {
-        base.log.debug("PO: no source swap needed, toggling res quality to " + data.index);
+        paella.log.debug("PO: no source swap needed, toggling res quality to " + data.index);
         paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {
           // "paella.pluginManager.doResize" is a custom #DCE param
           //  used to prevent getMasterVideo timer collisions during source swap
@@ -97,27 +97,27 @@ paella.addPlugin(function () {
     
     _getSources () {
       if (this._slave === null) {
-        base.log.debug("PO: Getting  original stream sources");
+        paella.log.debug("PO: Getting  original stream sources");
         this._getStreamSources();
       }
     }
     
     _firstLoadAction (params) {
       if (this._currentProfile !== '') {
-        base.log.debug("PO: not first time load, saving state " + params.profileName);
+        paella.log.debug("PO: not first time load, saving state " + params.profileName);
         this._currentProfile = params.profileName;
         return false;
       }
-      base.log.debug("PO: first time load: correcting monostream load on mutlivideo pub.");
+      paella.log.debug("PO: first time load: correcting monostream load on mutlivideo pub.");
       this._currentProfile = base.cookies. get ('lastProfile');
       if ((this._presentationOnlyProfile === this._currentProfile) && ! paella.player.videoContainer.isMonostream) {
         this.isCurrentlySingleStream = paella.player.videoContainer.isMonostream;
         if (paella.player.config.defaultProfile) {
-          base.log.debug("PO: saved profile is " + this._currentProfile + ", but changing to " + paella.player.config.defaultProfile);
+          paella.log.debug("PO: saved profile is " + this._currentProfile + ", but changing to " + paella.player.config.defaultProfile);
           this._currentProfile = paella.player.config.defaultProfile;
           paella.player.setProfile(this._currentProfile);
         } else {
-          base.log.debug("PO: Cannot change to multivideo profile because cannot find paella.player.config.defaultProfile");
+          paella.log.debug("PO: Cannot change to multivideo profile because cannot find paella.player.config.defaultProfile");
         }
       }
       this.isCurrentlySingleStream = paella.player.videoContainer.isMonostream;
@@ -126,10 +126,10 @@ paella.addPlugin(function () {
     }
     
     _toggleMultiToSingleProfile (data) {
-      base.log.debug("PO: toggle from Multi to Single with resolution " + data.reso);
+      paella.log.debug("PO: toggle from Multi to Single with resolution " + data.reso);
       var sources = null;
       this._getSources();
-      base.log.debug("PO: getting slave (presentation ) " + JSON.stringify(this._slave));
+      paella.log.debug("PO: getting slave (presentation ) " + JSON.stringify(this._slave));
       // unset previously set roles  (v5.2+)
       this._slave.role = undefined;
       sources =[ this._slave];
@@ -138,10 +138,10 @@ paella.addPlugin(function () {
     }
     
     _toggleSingleToMultiProfile (data) {
-      base.log.debug("PO: toggle from Single to Multi with master " + data.reso + " and slave " + data.reso2);
+      paella.log.debug("PO: toggle from Single to Multi with master " + data.reso + " and slave " + data.reso2);
       var sources = null;
       this._getSources();
-      base.log.debug("PO: getting slave (presentation) " + JSON.stringify(this._slave) + ", and master (presenter) " + JSON.stringify(this._master));
+      paella.log.debug("PO: getting slave (presentation) " + JSON.stringify(this._slave) + ", and master (presenter) " + JSON.stringify(this._master));
       // unset previously set roles (v5.2+)
       this._slave.role = undefined;
       this._master.role = undefined;
@@ -172,7 +172,7 @@ paella.addPlugin(function () {
         'master': videoData.volume,
         'slave': 0
       }).then(function () {
-        base.log.debug("PO: after set volume to " + videoData.volume);
+        paella.log.debug("PO: after set volume to " + videoData.volume);
         // Reset playback rate via playback button (ensure correct UI) if playback rate is not the default of 1.
         var playbackRateButton = $('#' + self._currentPlaybackRate.toString().replace(".", "\\.") + 'x_button');
         if (self.currentPlaybackRate != 1 && $(playbackRateButton).length) {
@@ -202,7 +202,7 @@ paella.addPlugin(function () {
     _toggleSources (sources, isPresOnly, resIndex) {
       var self = this;
       if (self._slave === null) {
-        base.log.error("PO: Stream resources were not properly retrieved at set up");
+        paella.log.error("PO: Stream resources were not properly retrieved at set up");
         return;
       }
       var wasSingle = paella.player.videoContainer.isMonostream;
@@ -214,7 +214,7 @@ paella.addPlugin(function () {
           // "paella.pluginManager.doResize" is a custom #DCE param,
           //  see DCE opencast-paella vendor override src/05_plugin_base.js
           paella.pluginManager.doResize = false;
-          base.log.debug("PO: Turned off doResize and paused videos, about to remove nodes");
+          paella.log.debug("PO: Turned off doResize and paused videos, about to remove nodes");
           self._removeVideoNodes();
           if (! wasSingle) {
             // set the cookie to monostream so setStreamData correctly sets single stream initialization
@@ -225,15 +225,15 @@ paella.addPlugin(function () {
             base.cookies. set ("lastProfile", self._lastMultiProfile);
           }
           if (sources !== null) {
-            base.log.debug("PO: Before videoContainer.setStreamData's sources to reload video container(s) " + sources);
+            paella.log.debug("PO: Before videoContainer.setStreamData's sources to reload video container(s) " + sources);
             paella.player.videoContainer.setStreamData(sources).then(function () {
-              base.log.debug("PO: Successfully changed stream sources");
+              paella.log.debug("PO: Successfully changed stream sources");
               if (isPresOnly && ! wasSingle) {
-                base.log.debug("PO: Changed source multi to single, monostream " + paella.player.videoContainer.isMonostream);
+                paella.log.debug("PO: Changed source multi to single, monostream " + paella.player.videoContainer.isMonostream);
               } else if (! isPresOnly && wasSingle) {
-                base.log.debug("PO: Changed source single to multi, monostream " + paella.player.videoContainer.isMonostream);
+                paella.log.debug("PO: Changed source single to multi, monostream " + paella.player.videoContainer.isMonostream);
               } else {
-                base.log.debug("PO: WARN Unexpected toggle state.");
+                paella.log.debug("PO: WARN Unexpected toggle state.");
               }
               self._restoreState(videoData)
             });
@@ -265,22 +265,22 @@ paella.addPlugin(function () {
       }
       // clear existing stream provider data
       paella.player.videoContainer._streamProvider.constructor();
-      base.log.debug("PO: removed video1 and video2 nodes");
+      paella.log.debug("PO: removed video1 and video2 nodes");
     }
     
     // Video load listener to unfreeze a frozen moster video with a seek event
     _addMasterReloadListener (state) {
-      base.log.debug("PO: about to bind master reload 'emptied' event");
+      paella.log.debug("PO: about to bind master reload 'emptied' event");
       var video1node = paella.player.videoContainer.masterVideo();
       $(video1node.video).bind('emptied', function (evt) {
-        base.log.debug("PO: on event 'emptied', doing seekToTime to unfreeze master " + JSON.stringify(state));
+        paella.log.debug("PO: on event 'emptied', doing seekToTime to unfreeze master " + JSON.stringify(state));
         paella.player.videoContainer.seekToTime(state.currentTime);
         $(this).unbind('emptied');
       });
       // needed for Safari
       $(video1node.video).bind('canplay canplaythrough', function (evt) {
         if (! paella.pluginManager.doResize) {
-          base.log.debug("PO: on event " + evt.type + ", doing seekToTime to unfreeze master");
+          paella.log.debug("PO: on event " + evt.type + ", doing seekToTime to unfreeze master");
           paella.player.videoContainer.seekToTime(state.currentTime);
         }
         $(this).unbind('canplay canplaythrough');
