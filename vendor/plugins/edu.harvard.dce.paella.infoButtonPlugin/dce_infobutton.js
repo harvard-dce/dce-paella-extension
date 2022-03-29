@@ -23,7 +23,7 @@ paella.addPlugin(function () {
       return 3030;
     }
     getAriaLabel() {
-      return base.dictionary.translate("Information");
+      return paella.utils.dictionary.translate("Information");
     }
     getMinWindowSize () {
       return 300;

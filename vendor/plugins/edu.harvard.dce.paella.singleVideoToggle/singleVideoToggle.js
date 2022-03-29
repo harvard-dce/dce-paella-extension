@@ -22,21 +22,21 @@ paella.addPlugin(() => {
       this._toggleIndex = 1; //toggle to presentation when button pressed first time
     }
     getDefaultToolTip () {
-      return base.dictionary.translate(this._toolTipOpts[ this._getOptIndex()]);
+      return paella.utils.dictionary.translate(this._toolTipOpts[ this._getOptIndex()]);
     }
     getAriaLabel() {
-      return base.dictionary.translate(this._toolTipOpts[ this._getOptIndex()]);
+      return paella.utils.dictionary.translate(this._toolTipOpts[ this._getOptIndex()]);
     }
     getAlignment() {
       return 'right';
     }
     getSubclass() {
       // #DCE OPC-497 show current res text on button (get the mutli quality button style)
-      return base.dictionary.translate(this._subClassOpts[ this._getOptIndex()]);
+      return paella.utils.dictionary.translate(this._subClassOpts[ this._getOptIndex()]);
     }
     getIconClass() {
       // #DCE OPC-497 show current res text on button
-      return base.dictionary.translate(this._iconClassOpts[ this._getOptIndex()]);
+      return paella.utils.dictionary.translate(this._iconClassOpts[ this._getOptIndex()]);
     }
     getIndex() {
       return 450;

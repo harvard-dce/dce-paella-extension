@@ -22,13 +22,13 @@ paella.addPlugin(function () {
             return paella.player.selectedProfile;
         }
         getDefaultToolTip () {
-            return base.dictionary.translate("Switch video layouts");
+            return paella.utils.dictionary.translate("Switch video layouts");
         }
         getIndex () {
             return 450;
         }
         getAriaLabel() {
-            return base.dictionary.translate("Switch video layouts");
+            return paella.utils.dictionary.translate("Switch video layouts");
         }
         getAlignment () {
             return 'right';

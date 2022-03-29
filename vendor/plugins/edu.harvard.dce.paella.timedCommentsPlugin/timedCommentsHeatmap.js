@@ -33,10 +33,10 @@ paella.addPlugin(function () {
       return 550;
     }
     getDefaultToolTip() {
-      return base.dictionary.translate("Show comments");
+      return paella.utils.dictionary.translate("Show comments");
     }
     getAriaLabel() {
-      return base.dictionary.translate("Social notes");
+      return paella.utils.dictionary.translate("Social notes");
     }
     getName() {
       return "edu.harvard.dce.paella.timedCommentsHeatmapPlugin";
