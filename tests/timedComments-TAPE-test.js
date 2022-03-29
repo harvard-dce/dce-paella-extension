@@ -49,13 +49,14 @@ test('Timed Comments sort', function annotationsSortTest(t) {
       }
     });
     t.equal(mismatch, null, "order before sorting annotations");
-    getTestClass().sortAnnotations();
-    getTestClass()._annotations.forEach(function(annot, index) {
-      if (annot.annotationId !== afterSortedOrder[index]) {
-          mismatch = index + ". " + afterSortedOrder[index] + " should not be " +  annot.annotationId;
-      }
+    getTestClass().filterAndSortAnnots().then(() => {
+      getTestClass()._annotations.forEach(function(annot, index) {
+        if (annot.annotationId !== afterSortedOrder[index]) {
+            mismatch = index + ". " + afterSortedOrder[index] + " should not be " +  annot.annotationId;
+        }
+      });
+      t.equal(mismatch, null, "order after sorting annotations");
     });
-    t.equal(mismatch, null, "order after sorting annotations");
 });
 
 var mockPaellaObject = {
@@ -69,8 +70,13 @@ var mockPaellaObject = {
         videoIdentifier: 'the-video-identifier',
         videoContainer: {
             currentTime: mockCurrentTime,
-            paused: mockPaused
-        }
+            paused: mockPaused,
+            trimming: () => {
+              return new Promise((resolve, reject) => {
+                 return resolve({enabled: true, start: 0, end: 2000});
+              });
+            }
+        },
     },
     events: {
         //created by the module
@@ -90,7 +96,6 @@ var mockConfig = {};
 // Mocks up the class of the plugin to test
 function setUpMocks(opts) {
   global.paella = _.cloneDeep(mockPaellaObject);
-  global.base = {};
 
   global.class = function (classDef) {
     function createClass() {
@@ -119,7 +124,7 @@ function parseSampleAnnotations(data) {
     if (!(annotations instanceof Array)) {
         annotations =[annotations];
     }
-    
+
     // Transform stringfied value into json object
     annotations = annotations.map(function (obj) {
         var rObj = obj;
@@ -161,6 +166,5 @@ function mockPausedIsTrue() {
 function tearDownGlobals() {
     delete global.location;
     delete global.paella;
-    delete global.base;
-    delete global. Class;
+    delete global.Class;
 }

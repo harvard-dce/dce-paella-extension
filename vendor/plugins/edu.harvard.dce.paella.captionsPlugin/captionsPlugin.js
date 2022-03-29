@@ -49,13 +49,13 @@ paella.addPlugin(function () {
       return paella.ButtonPlugin.type.popUpButton;
     }
     getDefaultToolTip () {
-      return base.dictionary.translate("Captions");
+      return paella.utils.dictionary.translate("Subtitles");
     }
     getIndex () {
       return 664;
     }
     getAriaLabel() {
-      return base.dictionary.translate("Captions");
+      return paella.utils.dictionary.translate("Subtitles");
     }
     
     closeOnMouseOut () {
@@ -241,7 +241,7 @@ paella.addPlugin(function () {
     
     action () {
       var self = this;
-      self._browserLang = base.dictionary.currentLanguage();
+      self._browserLang = paella.utils.dictionary.currentLanguage();
       self._autoScroll = true;
       
       switch (self._open) {
@@ -310,7 +310,7 @@ paella.addPlugin(function () {
       //BUTTON EDITOR
       thisClass._editor = document.createElement("button");
       thisClass._editor.className = "editorButton";
-      thisClass._editor.innerHTML = "";
+      thisClass._editor.innerText = "";
       thisClass._bar.appendChild(thisClass._editor);
       
       //BUTTON jQuery
@@ -354,7 +354,7 @@ paella.addPlugin(function () {
       thisClass._input.type = "text";
       thisClass._input.id = "captionsBarInput";
       thisClass._input.name = "captionsString";
-      thisClass._input.placeholder = base.dictionary.translate("Search captions");
+      thisClass._input.placeholder = paella.utils.dictionary.translate("Search captions");
       thisClass._bar.appendChild(thisClass._input);
       
       //INPUT jQuery
@@ -368,7 +368,7 @@ paella.addPlugin(function () {
         if (thisClass._searchTimer != null) {
           thisClass._searchTimer.cancel();
         }
-        thisClass._searchTimer = new base.Timer(function (timer) {
+        thisClass._searchTimer = new paella.utils.Timer(function (timer) {
           thisClass.doSearch(text);
         },
         thisClass._searchTimerTime);
@@ -408,7 +408,7 @@ paella.addPlugin(function () {
 
       let spanOff = document.createElement("span");
       spanOff.setAttribute("class", "captions-off");
-      spanOff.textContent = base.dictionary.translate("off");
+      spanOff.textContent = paella.utils.dictionary.translate("off");
 
       // Input must be first child of label (to accomadate styling)
       label.appendChild(thisClass._switch);
@@ -419,7 +419,7 @@ paella.addPlugin(function () {
         let spanOn = document.createElement("span");
         spanOn.setAttribute("class", "captions-on");
         spanOn.setAttribute("data-value", langs[0].id);
-        spanOn.textContent = base.dictionary.translate("on");
+        spanOn.textContent = paella.utils.dictionary.translate("on");
         // save ref to default lang
         thisClass._dceLangDefault = langs[0].id;
         displayDiv.appendChild(spanOn);

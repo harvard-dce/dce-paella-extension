@@ -22,13 +22,13 @@ paella.addPlugin(function () {
             return paella.player.selectedProfile;
         }
         getDefaultToolTip () {
-            return base.dictionary.translate("Switch video layouts");
+            return paella.utils.dictionary.translate("Switch video layouts");
         }
         getIndex () {
             return 450;
         }
         getAriaLabel() {
-            return base.dictionary.translate("Switch video layouts");
+            return paella.utils.dictionary.translate("Switch video layouts");
         }
         getAlignment () {
             return 'right';
@@ -58,7 +58,7 @@ paella.addPlugin(function () {
                 this.toggleProfileVideos(chosenProfile);
             }
             // #DCE OPC-455 log
-            base.log.debug(`OPC-455 viewModeTogglePlugin setProfile '${chosenProfile}' on '${toToggle}'`);
+            paella.log.debug(`OPC-455 viewModeTogglePlugin setProfile '${chosenProfile}' on '${toToggle}'`);
             var overlayContainer = paella.player.videoContainer.overlayContainer;
             if (overlayContainer) {
                 overlayContainer.clear();
@@ -66,7 +66,7 @@ paella.addPlugin(function () {
             paella.player.setProfile(chosenProfile);
         }
         checkEnabled (onSuccess) {
-            onSuccess(! paella.player.videoContainer.isMonostream && !base.userAgent.system.iOS );
+            onSuccess(! paella.player.videoContainer.isMonostream && !paella.utils.userAgent.system.iOS );
         }
         // called by Mutli-Single view (presentationOnlyPlugin)
         turnOffVisibility() {
@@ -78,7 +78,7 @@ paella.addPlugin(function () {
         turnOnVisibility() {
             this.config.visibleOn = undefined;
             this.checkVisibility();
-            base.log.debug(`OPC-455 viewModeTogglePlugin turnOnVisibility, time '${new Date()}'`);
+            paella.log.debug(`OPC-455 viewModeTogglePlugin turnOnVisibility, time '${new Date()}'`);
         }
         toggleProfileVideos(profileId) {
             let profile = paella.profiles.getProfile(profileId);

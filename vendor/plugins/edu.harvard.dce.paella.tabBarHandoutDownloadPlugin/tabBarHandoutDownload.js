@@ -25,10 +25,10 @@ paella.addPlugin(function () {
       return "edu.harvard.dce.paella.tabBarHandoutDownloadPlugin";
     }
     getDefaultToolTip() {
-      return base.dictionary.translate("Class Handouts");
+      return paella.utils.dictionary.translate("Class Handouts");
     }
     getAriaLabel() {
-      return base.dictionary.translate("Handouts");
+      return paella.utils.dictionary.translate("Handouts");
     }
     
     buildContent(domElement) {
@@ -87,7 +87,7 @@ paella.addPlugin(function () {
       // in case it sends an attachment mimetype
       var mimetype = '';
       if (attachment.mimetype) {
-        text += ' <span class="handoutLinkText MIMEType">[' + paella.dictionary.translate(attachment.mimetype) + ']' + '</span>';
+        text += ' <span class="handoutLinkText MIMEType">[' + paella.utils.dictionary.translate(attachment.mimetype) + ']' + '</span>';
       }
       return text;
     }

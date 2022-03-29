@@ -33,10 +33,10 @@ paella.addPlugin(function () {
       return 550;
     }
     getDefaultToolTip() {
-      return base.dictionary.translate("Show comments");
+      return paella.utils.dictionary.translate("Show comments");
     }
     getAriaLabel() {
-      return base.dictionary.translate("Social notes");
+      return paella.utils.dictionary.translate("Social notes");
     }
     getName() {
       return "edu.harvard.dce.paella.timedCommentsHeatmapPlugin";
@@ -98,7 +98,7 @@ paella.addPlugin(function () {
         question: 'canAnnotate'
       },
       function (data) {
-        base.log.debug("TC canAnnotate " + data);
+        paella.log.debug("TC canAnnotate " + data);
         if (data === "true") {
           // prevent annots on live stream for now, until test live video inpoints
           thisClass.isEnabled = ! paella.player.isLiveStream();
@@ -125,14 +125,14 @@ paella.addPlugin(function () {
     willShowContent() {
       var thisClass = this;
       thisClass.loadcommentHeatmap();
-      base.log.debug("TC showing comments heatmap" + new Date());
+      paella.log.debug("TC showing comments heatmap" + new Date());
       // new event type created by timedCommentsOverlayPlugin
       if (paella.events.showTimedComments) {
         paella.events.trigger(paella.events.showTimedComments, {
           sender: this
         });
       }
-      thisClass.commentHeatmapTimer = new base.Timer(function (timer) {
+      thisClass.commentHeatmapTimer = new paella.utils.Timer(function (timer) {
         thisClass.loadcommentHeatmap(true);
       },
       5000);
@@ -180,9 +180,9 @@ paella.addPlugin(function () {
       },
       function (data, status) {
         if (data === 'No change') {
-          base.log.debug("TC No change in data since  " + thisClass.ifModifiedSinceDate);
+          paella.log.debug("TC No change in data since  " + thisClass.ifModifiedSinceDate);
         } else if (refreshOnly) {
-          base.log.debug("TC Refreshing prints, found " + (data ? data.length: 0));
+          paella.log.debug("TC Refreshing prints, found " + (data ? data.length: 0));
           thisClass.refreshPrints(data);
         } else {
           paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {

@@ -25,9 +25,9 @@
         "config": {
           "*** You can add more hls.js settings here": "",
           "https://github.com/video-dev/hls.js/blob/master/docs/API.md": "",
-          "maxBufferLength": 30,
-          "maxMaxBufferLength": 600,
-          "maxBufferSize": 60000000,
+          "maxBufferLength": 6,
+          "maxMaxBufferLength": 6,
+          "maxBufferSize": 600000000,
           "maxBufferHole": 0.5,
           "lowBufferWatchdogPeriod": 0.5,
           "highBufferWatchdogPeriod": 3,
@@ -35,13 +35,11 @@
           "dceHideManualQualityChoices": true,
           "debug": true,
           "testBandwidth" : false,
-          "initialQualityLevel": 4,
           "startLevel" : 4,
           "autoStartLoad" : false
         },
         "iOSMaxStreams": 2,
-        "androidMaxStreams": 2,
-        "initialQualityLevel": 4
+        "androidMaxStreams": 2
        },
        { "factory":"ChromaVideoFactory", "enabled":true },
        { "factory":"WebmVideoFactory", "enabled":true },
@@ -154,17 +152,11 @@
           { "icon":"slide_professor_icon.svg", "id":"one_only", "content":["presenter","presentation"] }
         ]
       },
-      "edu.harvard.dce.paella.resizeLiveStream": {
-         "enabled": true
-      },
       "edu.harvard.edu.paella.singleMultipleQualitiesPlugin" : {
          "enabled": false,
          "showWidthRes":true,
          "presenterHasAudioTag":"multiaudio",
          "ariaLabel": "Change video quality"
-      },
-      "edu.harvard.dce.paella.presentationOnlyPlugin": {
-         "enabled": false
       },
       "edu.harvard.dce.paella.singleVideoTogglePlugin": {
          "enabled": true,
@@ -205,7 +197,9 @@
       "es.upv.paella.multipleQualitiesPlugin": {
         "enabled": true,
         "showWidthRes": true,
-        "minVisibleQuality": 60
+        "minWindowSize": 550,
+        "minVisibleQuality": 60,
+        "ariaLabel": "Change video quality"
       },
       "es.upv.paella.ImageControlPlugin": {
         "enabled": false
@@ -270,7 +264,14 @@
          ]
       },
       "es.upv.paella.playbackRatePlugin": {
-        "enabled": true
+        "enabled": true,
+        "availableRates": [
+          0.75,
+          1,
+          1.25,
+          1.5,
+          2
+        ]
       },
       "es.upv.paella.helpPlugin": {
         "enabled": false,
@@ -339,7 +340,8 @@
         "enabled": false
       },
       "es.upv.paella.playButtonOnScreenPlugin": {
-        "enabled": true
+        "enabled": true,
+        "showOnPause": true
       },
       "es.upv.paella.frameControlPlugin": {
         "enabled":true,
@@ -381,14 +383,6 @@
         "enabled": true
       },
       "es.upv.paella.overlayCaptionsPlugin": {
-        "enabled": true
-      },
-      "edu.harvard.dce.paella.iphonePluginDisablerPlugin": {
-        "** Disabling for 6x": "fullScreenPlugin.getMinWindowSize & frameControlPlugin.getMinWindowSize to 10000",
-        "enabled": false,
-        "actiondelay":200
-      },
-      "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
         "enabled": true
       },
       "//*****  Keyboard plugins": "",

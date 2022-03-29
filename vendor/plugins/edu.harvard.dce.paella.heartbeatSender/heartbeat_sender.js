@@ -17,10 +17,10 @@ paella.addPlugin(function () {
     }
 
     load(eventType, params) {
-      base.log.debug(`HUDCE HeartBeat timer loading with heartbeat interval: ${this.config.heartBeatTime}ms`);
+      paella.log.debug(`HUDCE HeartBeat timer loading with heartbeat interval: ${this.config.heartBeatTime}ms`);
       var thisClass = this;
       if (this.config.heartBeatTime > 0) {
-        thisClass.heartbeatTimer = new base.Timer(
+        thisClass.heartbeatTimer = new paella.utils.Timer(
         (thisClass.registerHeartbeat).bind(thisClass),
         thisClass.config.heartBeatTime);
         thisClass.heartbeatTimer.repeat = true;

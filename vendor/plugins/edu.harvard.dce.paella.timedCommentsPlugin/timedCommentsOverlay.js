@@ -368,7 +368,7 @@ paella.addPlugin(function () {
       //var overlayContainer = $("#overlayContainer");
       var overlayContainer = $('#playerContainer');
       if (! overlayContainer) {
-        base.log.debug("TC Unable to find overlayContainer. Cannot show comments.");
+        paella.log.debug("TC Unable to find overlayContainer. Cannot show comments.");
         return;
       }
 
@@ -406,7 +406,7 @@ paella.addPlugin(function () {
       if ($('#tc_current_timestamp').length > 0) {
         $('#tc_current_timestamp').html(paella.utils.timeParse.secondsToTime(currentTime));
       } else {
-        base.log.debug("TC Unable to find tc_current_timestamp. Cannot set current time for new comment.");
+        paella.log.debug("TC Unable to find tc_current_timestamp. Cannot set current time for new comment.");
       }
 
       // movable & resizable comments box
@@ -551,7 +551,7 @@ paella.addPlugin(function () {
               addReplyBox();
             }
             previousParentId = l.annotationId;++ timeBlockcount;
-            base.log.debug("creating comment block for " + l.annotationId);
+            paella.log.debug("creating comment block for " + l.annotationId);
             timeStampBlockEl = document.createElement('div');
             timeStampBlockEl.className = "tc_timestamp_block";
             timeStampBlockEl.setAttribute('data-sec-begin', inAdjusted);
@@ -693,7 +693,7 @@ paella.addPlugin(function () {
 
       if ((newTopActive != thisClass._curActiveTop) && doScroll) {
         thisClass._curActiveTop = newTopActive;
-        base.log.debug("TC, going to scroll element " + $(newTopActive).attr('id') + " currently at " + $(newTopActive).position().top + " from top, scroll positon is currently at " + $("#innerAnnotation").scrollTop());
+        paella.log.debug("TC, going to scroll element " + $(newTopActive).attr('id') + " currently at " + $(newTopActive).position().top + " from top, scroll positon is currently at " + $("#innerAnnotation").scrollTop());
         var scrollTo = $("#innerAnnotation").scrollTop() + $(newTopActive).position().top -15;
         if (scrollTo < 0) scrollTo = 0;
         $("#innerAnnotation").animate({
@@ -762,7 +762,7 @@ paella.addPlugin(function () {
         });
       },
       // else log issue
-      base.log.debug("TC, unable to retrieve user information, cannot write comment"));
+      paella.log.debug("TC, unable to retrieve user information, cannot write comment"));
     }
 
     /**
@@ -815,7 +815,7 @@ paella.addPlugin(function () {
         paella.userTracking.log("paella:social:addreply");
       },
       // else log issue
-      base.log.debug("TC, unable to retrieve user information, cannot write comment"));
+      paella.log.debug("TC, unable to retrieve user information, cannot write comment"));
     }
 
     hideContent() {

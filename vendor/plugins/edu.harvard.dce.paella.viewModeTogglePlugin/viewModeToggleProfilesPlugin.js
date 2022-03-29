@@ -9,10 +9,10 @@ paella.addProfile(() => {
         resolve(null);
       } else {
         // do not allow multi-video to load to single video view on first load unless on an iOS
-        if (base.userAgent.system.iOS) {
-          base.cookies.set('lastProfile', 'one_big');
-        } else if (base.cookies.get('lastProfile') === 'one_big') {
-          base.cookies.set('lastProfile', paella.player.config.defaultProfile || 'side_by_side');
+        if (paella.utils.userAgent.system.iOS) {
+          paella.utils.cookies.set('lastProfile', 'one_big');
+        } else if (paella.utils.cookies.get('lastProfile') === 'one_big') {
+          paella.utils.cookies.set('lastProfile', paella.player.config.defaultProfile || 'side_by_side');
         }
         resolve({
           "id": "side_by_side",

@@ -65,8 +65,9 @@ test('Livestream heartbeat test', function liveStreamTest(t) {
 // TODO: Separate mocks and asserts.
 
 function setUpAssertingMocks(t) {
-  global.base.Timer = timer;
-  global.base.log = {
+  global.paella.utils = {};
+  global.paella.utils.Timer = timer;
+  global.paella.log = {
      debug: function(){}
   }
   global.XMLHttpRequest = createMockXHR();
@@ -84,7 +85,7 @@ function setUpAssertingMocks(t) {
       'Sets the timer to run at the interval specified in the config.'
     );
 
-    process.nextTick(callback, global.base.Timer);
+    process.nextTick(callback, global.paella.utils.Timer);
     process.nextTick(checkRepeatValue);
 
     var instance = this;
@@ -179,8 +180,6 @@ function setUpMocks(opts) {
   global.paella.player.isLiveStream = mockIsLiveStream;
   global.paella.player.videoContainer.paused = mockPausedIsTrue;
 
-  global.base = {};
-
   global.class = function (classDef) {
 
     function createClass() {
@@ -240,7 +239,6 @@ function mockMasterVideo() {
 function tearDownGlobals() {
   delete global.location;
   delete global.paella;
-  delete global.base;
   delete global.Class;
   delete global.XMLHttpRequest;
   delete global.EventDrivenPlugin;
