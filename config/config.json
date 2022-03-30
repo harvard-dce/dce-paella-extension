@@ -390,11 +390,6 @@
       "es.upv.paella.overlayCaptionsPlugin": {
         "enabled": true
       },
-      "edu.harvard.dce.paella.iphonePluginDisablerPlugin": {
-        "** Disabling for 6x": "fullScreenPlugin.getMinWindowSize & frameControlPlugin.getMinWindowSize to 10000",
-        "enabled": false,
-        "actiondelay":200
-      },
       "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
         "enabled": true
       },
