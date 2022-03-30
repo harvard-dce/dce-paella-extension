@@ -385,7 +385,13 @@
         "enabled": true
       },
       "//*****  Keyboard plugins": "",
-      "es.upv.paella.defaultKeysPlugin": {"enabled": true }
+      "es.upv.paella.defaultKeysPlugin": {
+        "enabled": true
+      },
+      "//*****  DCE Embed API appraiser plugin": "",
+      "edu.harvard.dce.paella.iFrameApiAppraiser": {
+        "enabled": true
+      }
     }
   },
   "standalone": {

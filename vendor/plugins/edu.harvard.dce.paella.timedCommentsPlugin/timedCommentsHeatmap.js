@@ -16,7 +16,7 @@ paella.addPlugin(function () {
       this.ifModifiedSinceClientOffset = null;
       this.isEnabled = false;
     }
-    
+
     getAlignment() {
       return 'right';
     }
@@ -44,7 +44,7 @@ paella.addPlugin(function () {
     getButtonType() {
       return paella.ButtonPlugin.type.timeLineButton;
     }
-    
+
     // comment heatmap needs to align with DCE CS50 style playback bar
     resize () {
       if (this.isEnabled && $("#playerContainer_controls_playback_playbackBar").length > 0) {
@@ -54,7 +54,7 @@ paella.addPlugin(function () {
         $(".commentHeatmapContainer").css("width", width + "px");
       }
     }
-    
+
     setup() {
       var thisClass = this;
       // Bind to window resize, 'paella.events.resize' does not capture window resize events
@@ -67,30 +67,30 @@ paella.addPlugin(function () {
       } else {
         thisClass.ifModifiedSinceServerDate = 0;
       }
-      
+
       switch (this.config.skin) {
         case 'custom':
         this.fillStyle = this.config.fillStyle;
         this.strokeStyle = this.config.strokeStyle;
         break;
-        
+
         case 'dark':
         this.fillStyle = '#727272';
         this.strokeStyle = '#424242';
         break;
-        
+
         case 'light':
         this.fillStyle = '#d8d8d8';
         this.strokeStyle = '#ffffff';
         break;
-        
+
         default:
         this.fillStyle = '#d8d8d8';
         this.strokeStyle = '#ffffff';
         break;
       }
     }
-    
+
     checkEnabled (onSuccess) {
       var thisClass = this;
       paella.data.read('timedComments', {
@@ -102,26 +102,29 @@ paella.addPlugin(function () {
         if (data === "true") {
           // prevent annots on live stream for now, until test live video inpoints
           thisClass.isEnabled = ! paella.player.isLiveStream();
-          onSuccess(! paella.player.isLiveStream());
+          // OPC-621 Force annots off with special URL param, social=off
+          // for Paella iFrame API embed
+          const socialArg = base.parameters.get('social');
+          onSuccess(!paella.player.isLiveStream() && socialArg !== 'off');
         } else {
           onSuccess(false);
         }
       });
     }
-    
+
     buildContent (domElement) {
       var container = document.createElement('div');
       container.className = 'commentHeatmapContainer';
-      
+
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'commentHeatmapCanvas';
       this.canvas.className = 'commentHeatmapCanvas';
       container.appendChild(this.canvas);
-      
-      
+
+
       domElement.appendChild(container);
     }
-    
+
     willShowContent() {
       var thisClass = this;
       thisClass.loadcommentHeatmap();
@@ -138,7 +141,7 @@ paella.addPlugin(function () {
       5000);
       thisClass.commentHeatmapTimer.repeat = true;
     }
-    
+
     refreshPrints (annotData) {
       var thisClass = this;
       if (annotData) {
@@ -152,7 +155,7 @@ paella.addPlugin(function () {
         });
       }
     }
-    
+
     didHideContent() {
       if (this.commentHeatmapTimer != null) {
         this.commentHeatmapTimer.cancel();
@@ -164,7 +167,7 @@ paella.addPlugin(function () {
         });
       }
     }
-    
+
     //Footprint reload sends annotations updated event (caught by any plugin interested in updated comments)
     loadcommentHeatmap (refreshOnly) {
       var thisClass = this;
@@ -172,8 +175,8 @@ paella.addPlugin(function () {
       // use server time
       var currentServerTime = new Date() - thisClass.ifModifiedSinceClientOffset;
       lastRequestDateStr = thisClass.makeISODateString(new Date(currentServerTime));
-      
-      
+
+
       paella.data.read('timedComments', {
         id: paella.initDelegate.getId(),
         ifModifiedSince: thisClass.ifModifiedSinceDate
@@ -192,7 +195,7 @@ paella.addPlugin(function () {
         thisClass.ifModifiedSinceDate = lastRequestDateStr;
       });
     }
-    
+
     loadfootPrintData (annotations, status, videoData) {
       var thisClass = this;
       var footPrintData = {
@@ -203,10 +206,10 @@ paella.addPlugin(function () {
       var data = thisClass.makeHeatmapData(annotations);
       var duration = Math.floor(videoData.duration);
       var trimStart = Math.floor(paella.player.videoContainer.trimStart());
-      
+
       var lastPosition = -1;
       var firstTime = true;
-      
+
       // iterate over the data and back fill the gaps for the video duration
       for (var i = 0; i < data.length; i++) {
         var currentPos = data[i].position - trimStart;
@@ -238,7 +241,7 @@ paella.addPlugin(function () {
         // save current position to back fill in the next loop
         lastPosition = currentPos;
       }
-      
+
       thisClass.drawcommentHeatmap(footPrintData);
       // align with playback bar
       thisClass.resize();
@@ -255,7 +258,7 @@ paella.addPlugin(function () {
         });
       });
     }
-    
+
     drawcommentHeatmap (footPrintData) {
       if (this.canvas) {
         var duration = Object.keys(footPrintData).length;
@@ -267,17 +270,17 @@ paella.addPlugin(function () {
             h = footPrintData[i];
           }
         }
-        
+
         this.canvas.setAttribute("width", duration);
         this.canvas.setAttribute("height", h);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.fillStyle = this.fillStyle; //'#faa166'; //'#9ED4EE';
         ctx.strokeStyle = this.strokeStyle; //'#fa8533'; //"#0000FF";
         ctx.lineWidth = 2;
-        
+
         ctx.webkitImageSmoothingEnabled = false;
         ctx.mozImageSmoothingEnabled = false;
-        
+
         for (i = 0; i < duration;++ i) {
           ctx.beginPath();
           ctx.moveTo(i, h);
@@ -286,7 +289,7 @@ paella.addPlugin(function () {
           ctx.lineTo(i + 1, h);
           ctx.closePath();
           ctx.fill();
-          
+
           ctx.beginPath();
           ctx.moveTo(i, h - footPrintData[i]);
           ctx.lineTo(i + 1, h - footPrintData[i + 1]);
@@ -295,7 +298,7 @@ paella.addPlugin(function () {
         }
       }
     }
-    
+
     // without the milliseconds
     makeISODateString (d) {
       function pad(n) {
@@ -303,7 +306,7 @@ paella.addPlugin(function () {
       }
       return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z';
     }
-    
+
     makeHeatmapData (timedComments) {
       var This = this;
       var temp = {
