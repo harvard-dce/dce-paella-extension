@@ -160,9 +160,6 @@
          "presenterHasAudioTag":"multiaudio",
          "ariaLabel": "Change video quality"
       },
-      "edu.harvard.dce.paella.presentationOnlyPlugin": {
-         "enabled": false
-      },
       "edu.harvard.dce.paella.singleVideoTogglePlugin": {
          "enabled": true,
          "ariaLabel": "Switch Videos"
