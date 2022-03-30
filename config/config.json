@@ -154,9 +154,6 @@
           { "icon":"slide_professor_icon.svg", "id":"one_only", "content":["presenter","presentation"] }
         ]
       },
-      "edu.harvard.dce.paella.resizeLiveStream": {
-         "enabled": true
-      },
       "edu.harvard.edu.paella.singleMultipleQualitiesPlugin" : {
          "enabled": false,
          "showWidthRes":true,
