@@ -49,13 +49,13 @@ paella.addPlugin(function () {
       return paella.ButtonPlugin.type.popUpButton;
     }
     getDefaultToolTip () {
-      return paella.utils.dictionary.translate("Captions");
+      return paella.utils.dictionary.translate("Subtitles");
     }
     getIndex () {
       return 664;
     }
     getAriaLabel() {
-      return paella.utils.dictionary.translate("Captions");
+      return paella.utils.dictionary.translate("Subtitles");
     }
     
     closeOnMouseOut () {
@@ -310,7 +310,7 @@ paella.addPlugin(function () {
       //BUTTON EDITOR
       thisClass._editor = document.createElement("button");
       thisClass._editor.className = "editorButton";
-      thisClass._editor.innerHTML = "";
+      thisClass._editor.innerText = "";
       thisClass._bar.appendChild(thisClass._editor);
       
       //BUTTON jQuery
