@@ -104,7 +104,7 @@ paella.addPlugin(function () {
           thisClass.isEnabled = ! paella.player.isLiveStream();
           // OPC-621 Force annots off with special URL param, social=off
           // for Paella iFrame API embed
-          const socialArg = base.parameters.get('social');
+          const socialArg = paella.utils.parameters.get('social');
           onSuccess(!paella.player.isLiveStream() && socialArg !== 'off');
         } else {
           onSuccess(false);

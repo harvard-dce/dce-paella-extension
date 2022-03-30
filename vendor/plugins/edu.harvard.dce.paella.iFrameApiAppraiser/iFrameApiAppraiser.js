@@ -86,7 +86,7 @@ paella.addPlugin(function () {
           this.sendMessageToEmbedApi(eventType);
           break;
         default:
-          base.log.debug('IFrameApiAppraiser: Unsupported event ', eventType);
+          paella.log.debug('IFrameApiAppraiser: Unsupported event ', eventType);
       }
       this.lastEvent = eventType;
     }
