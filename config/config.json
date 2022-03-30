@@ -387,9 +387,6 @@
       "es.upv.paella.overlayCaptionsPlugin": {
         "enabled": true
       },
-      "edu.harvard.dce.safari10ExitFullScreenControlBarMagicFix": {
-        "enabled": true
-      },
       "//*****  Keyboard plugins": "",
       "es.upv.paella.defaultKeysPlugin": {"enabled": true }
     }
