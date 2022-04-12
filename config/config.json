@@ -199,7 +199,9 @@
       "es.upv.paella.multipleQualitiesPlugin": {
         "enabled": true,
         "showWidthRes": true,
-        "minVisibleQuality": 60
+        "minWindowSize": 550,
+        "minVisibleQuality": 60,
+        "ariaLabel": "Change video quality"
       },
       "es.upv.paella.ImageControlPlugin": {
         "enabled": false
@@ -340,7 +342,8 @@
         "enabled": false
       },
       "es.upv.paella.playButtonOnScreenPlugin": {
-        "enabled": true
+        "enabled": true,
+        "showOnPause": true
       },
       "es.upv.paella.frameControlPlugin": {
         "enabled":true,
