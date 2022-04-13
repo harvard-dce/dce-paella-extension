@@ -35,13 +35,11 @@
           "dceHideManualQualityChoices": true,
           "debug": true,
           "testBandwidth" : false,
-          "initialQualityLevel": 4,
           "startLevel" : 4,
           "autoStartLoad" : false
         },
         "iOSMaxStreams": 2,
         "androidMaxStreams": 2,
-        "initialQualityLevel": 4
        },
        { "factory":"ChromaVideoFactory", "enabled":true },
        { "factory":"WebmVideoFactory", "enabled":true },
