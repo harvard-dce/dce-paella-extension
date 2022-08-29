@@ -1,7 +1,12 @@
 /**
  * DCE IFrameApiHelper
- * IFrame embed API plugin used in conjunction with iFrameEmbedApi.js
- * that is imported into parent window.
+ * This plugin passing player events to the OC-DCE iFrameEmbedApi.js.
+ * When the OC-DCE iFrameEmbedApi.js is imported into a parent window,
+ * it creates specially named iFrame to embed the player and which
+ * this plugin passes event messages.
+ * This plugin is only active if the player has been embedded
+ * in that specially named iFrame.
+ *
  * @author HUDCE
  */
 paella.addPlugin(function () {
@@ -65,9 +70,14 @@ paella.addPlugin(function () {
     }
 
     /**
-     * The handle this Paella event driven plugin is
+     * The handle this Paella event driven plugin
+     * calls when an event fires.
+     * By intention, a limited number of events
+     * are passed to the wrapper in order to protect
+     * the playerand keep the API simple.
+     * Inlude more events to be passed as they become relevant.
+     *
      * @inheritdoc
-     * called when an event fires.
      * @param {string} eventType - the event that was fired
      * @param {object} [params] - a set of params associated to the event
      */
