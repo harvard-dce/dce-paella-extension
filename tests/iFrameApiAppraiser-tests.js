@@ -1,12 +1,5 @@
 var test = require('tape');
 var _ = require('lodash');
-var url = require('url');
-var reload = require('require-reload')(require);
-var Promise = require('bluebird');
-
-var mockCurrentTimePromise = function() {
-  return Promise.resolve(300);
-}
 
 var modulePath = '../vendor/plugins/edu.harvard.dce.paella.iFrameApiAppraiser/iFrameApiAppraiser.js';
 
@@ -66,7 +59,7 @@ setUpMocks();
 // Loading the plugin code actually executes the plugin.
 // That was how Paella plugins worked before Paella 6.1.2.
 // After Paella 6.1.2,  plugins are control loaded by the plugin manager
-// But hopefully still works in this test
+// But still works after 6.1.2.
 require(modulePath);
 
 test('iFrameApiAppraiser init test', function iFrameApiAppraiserTests(t) {
@@ -176,16 +169,13 @@ function setUpMocks() {
       postMessage: (msg) => {}
     }
   };
-
   global.paella = _.cloneDeep(mockPaellaObject);
-
   global.class = function (classDef) {
     function createClass() {
       return _.cloneDeep(classDef);
     };
     global.paella.plugins['test'] = createClass();
   };
-
 }
 
 function getTestClass() {
@@ -196,10 +186,6 @@ function mockAddPlugin(pluginClass) {
   let PluginClass = pluginClass();
   let pluginClassInstance = new PluginClass();
   global.class(pluginClassInstance);
-}
-
-function mockCurrentTime() {
-  return 300;
 }
 
 function tearDownGlobals() {
