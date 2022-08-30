@@ -23,11 +23,11 @@ var afterSortedOrder = [235367659, 235367660, 235367661, 235367662, 235367672, 2
 test('Timed Comments tests', function modulesLoadTest(t) {
     // tearDownGlobals
     t.plan(1);
-    // mock the resources neede by the module
+    // mock the resources needed by the module
     setUpMocks();
     // add the module
     require(modulePathOverlay);
-    // verify it loaded with defalts
+    // verify it loaded with defaults
     t.equal(getTestClass()._curScrollTop, 0, "module loaded with default config");
 });
 

@@ -42,7 +42,7 @@ paella.addPlugin(function () {
       ];
       // This bind must happen early to catch events like the videoReady
       this.eventsBoundEarly.forEach((e) => {
-        paella.log.debug('IFrameApiAppraiser: early binding event ', e);
+        paella.log.debug('IFrameApiAppraiser: early binding event ' + e);
         paella.events.bind(e, () => {
           this.sendMessageToEmbedApi(e);
         });
@@ -81,9 +81,9 @@ paella.addPlugin(function () {
      */
     getEvents() {
       // Filter out the ones already early bound to avoid duplicate messages
-      const nonEarlyBoundEvents = this.eventsToAppraise.filter(e => {!this.eventsBoundEarly.contains(e)});
+      const nonEarlyBoundEvents = this.eventsToAppraise.filter(e => {!this.eventsBoundEarly.includes(e)});
       // Return events associated to the EventDrivenPlugin API
-      paella.log.debug('IFrameApiAppraiser: late binding ', nonEarlyBoundEvents);
+      paella.log.debug('IFrameApiAppraiser: late binding ' + nonEarlyBoundEvents);
       return nonEarlyBoundEvents;
     }
 
@@ -101,12 +101,15 @@ paella.addPlugin(function () {
      */
     onEvent(eventType, params) {
       // Make sure the event is supported
-      if (this.eventsToAppraiseWithTime.contains(eventType)) {
+      if (this.eventsToAppraiseWithTime.includes(eventType)) {
         this.sendMessageToEmbedApi(eventType, params.currentTime);
-      } else if (this.eventsToAppraiseWithoutTime) {
+        return 1;
+      } else if (this.eventsToAppraiseWithoutTime.includes(eventType)) {
         this.sendMessageToEmbedApi(eventType);
+        return 2;
       } else {
-        paella.log.debug('IFrameApiAppraiser: Unsupported event ', eventType);
+        paella.log.debug('IFrameApiAppraiser: Unsupported event ' + eventType);
+        return 3;
       }
     }
 
