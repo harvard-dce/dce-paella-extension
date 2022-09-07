@@ -11,37 +11,39 @@
  */
 paella.addPlugin(function () {
   return class IFrameApiAppraiser extends paella.EventDrivenPlugin {
+
+    // Events that are early bind and not part of the EventDrivenPlugin binding
+    static EventsBoundEarly = [
+      paella.events.videoReady,
+    ];
+    // Events to pass into the message with a time value
+    static EventsToAppraiseWithTime = [
+      paella.events.timeupdate,
+    ];
+    // Events to pass into the message
+    static EventsToAppraiseWithoutTime = [
+      paella.events.play,
+      paella.events.pause,
+      paella.events.seeked,
+      paella.events.error,
+      paella.events.loadComplete,
+      paella.events.ended,
+      ...IFrameApiAppraiser.EventsBoundEarly,
+    ];
+    // The combination of events supported
+    static EventsToAppraise = [
+      ...IFrameApiAppraiser.EventsToAppraiseWithTime,
+      ...IFrameApiAppraiser.EventsToAppraiseWithoutTime
+    ];
+
     /**
      * @constructor
      * @augments paella.EventDrivenPlugin
      */
     constructor () {
       super();
-      // Events that are early bind and not part of the EventDrivenPlugin binding
-      this.eventsBoundEarly = [
-        paella.events.videoReady,
-      ];
-      // Events to pass into the message with a time value
-      this.eventsToAppraiseWithTime = [
-        paella.events.timeupdate,
-      ];
-      // Events to pass into the message
-      this.eventsToAppraiseWithoutTime = [
-        paella.events.play,
-        paella.events.pause,
-        paella.events.seeked,
-        paella.events.error,
-        paella.events.loadComplete,
-        paella.events.ended,
-        ...this.eventsBoundEarly,
-      ];
-      // The combination of events supported
-      this.eventsToAppraise = [
-        ...this.eventsToAppraiseWithTime,
-        ...this.eventsToAppraiseWithoutTime
-      ];
       // This bind must happen early to catch events like the videoReady
-      this.eventsBoundEarly.forEach((e) => {
+      IFrameApiAppraiser.EventsBoundEarly.forEach((e) => {
         paella.log.debug('IFrameApiAppraiser: early binding event ' + e);
         paella.events.bind(e, () => {
           this.sendMessageToEmbedApi(e);
@@ -81,11 +83,20 @@ paella.addPlugin(function () {
      */
     getEvents() {
       // Filter out the ones already early bound to avoid duplicate messages
-      const nonEarlyBoundEvents = this.eventsToAppraise.filter(e => {!this.eventsBoundEarly.includes(e)});
+      const nonEarlyBoundEvents = IFrameApiAppraiser.EventsToAppraise.filter(e => {
+        !IFrameApiAppraiser.EventsBoundEarly.includes(e);
+      });
       // Return events associated to the EventDrivenPlugin API
       paella.log.debug('IFrameApiAppraiser: late binding ' + nonEarlyBoundEvents);
       return nonEarlyBoundEvents;
     }
+
+    /**
+     * Helper class for testing
+     */
+     getEventsBoundEarly() {
+       return IFrameApiAppraiser.EventsBoundEarly;
+     }
 
     /**
      * The handle this Paella event driven plugin
@@ -101,10 +112,10 @@ paella.addPlugin(function () {
      */
     onEvent(eventType, params) {
       // Make sure the event is supported
-      if (this.eventsToAppraiseWithTime.includes(eventType)) {
+      if (IFrameApiAppraiser.EventsToAppraiseWithTime.includes(eventType)) {
         this.sendMessageToEmbedApi(eventType, params.currentTime);
         return 1;
-      } else if (this.eventsToAppraiseWithoutTime.includes(eventType)) {
+      } else if (IFrameApiAppraiser.EventsToAppraiseWithoutTime.includes(eventType)) {
         this.sendMessageToEmbedApi(eventType);
         return 2;
       } else {

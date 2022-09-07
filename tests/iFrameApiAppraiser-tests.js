@@ -72,7 +72,7 @@ test('iFrameApiAppraiser init test', function iFrameApiAppraiserTests(t) {
   );
   // verify it loaded with settings
   t.ok(
-    getTestClass().eventsBoundEarly.includes(paella.events.videoReady),
+    getTestClass().getEventsBoundEarly().includes(paella.events.videoReady),
     'The constructor sets initial values'
   );
 });
