@@ -180,13 +180,20 @@ paella.addPlugin(function () {
 
     reloadComments(annotData) {
       var thisClass = this;
-      thisClass._curScrollTop = $("#innerAnnotation") ? $("#innerAnnotation").scrollTop(): 0;
+      // Keep existing scroll point on reload if it exists
+      if (!thisClass._curScrollTop) {
+        thisClass._curScrollTop = (
+          $("#innerAnnotation") && $("#innerAnnotation").scrollTop()
+          ? $("#innerAnnotation").scrollTop()
+          : 0
+        );
+      }
       // isActive is set back to true in data load promise
       thisClass._isActive = false;
       if (thisClass._rootElement) {
-        $(thisClass._rootElement).empty();
         $(thisClass._rootElement).resizable('destroy');
         $(thisClass._rootElement).draggable('destroy');
+        $(thisClass._rootElement).empty();
       }
       thisClass.loadTimedComments(annotData);
     }
@@ -249,21 +256,26 @@ paella.addPlugin(function () {
           return paella.player.videoContainer.currentTime();
         })
         .then((trimmedTime) => {
-          // nested to get time and userdata
-          thisClass.getUserData().then((userData) => {
-              return thisClass.drawTimedComments(trimmedTime, userData);
-          })
+          // Save to class var to be accessible
+          thisClass._trimmedTime = trimmedTime;
+          return thisClass.getUserData();
+        })
+        .then((userData) => {
+          return thisClass.drawTimedComments(thisClass._trimmedTime, userData);
         })
         .then(() => {
           $("#innerAnnotation").animate({
             scrollTop: thisClass._curScrollTop
           },
           100);
-          // create the alias input DOM element
+          // Create the alias input DOM element
           thisClass._aliasUtil.initAliasDialogElement(thisClass);
-          // changing the layout profile that is most optimal to show comments
+          // Change the layout profile that is most optimal to show comments
           thisClass.changeToOptimalVideoProfile(thisClass._optimalProfile);
-          thisClass._isActive = true;
+          // Give scroll time to annimate prior restarting query by setting state active
+          setTimeout(() => {
+            thisClass._isActive = true;
+          }, 101);
         });
     }
 

@@ -62,10 +62,12 @@ paella.addPlugin(function () {
         thisClass.resize();
       });
       // Get the client side offset to the server side date
-      if (paella.opencast.me && paella.opencast.me.timestamp) {
-        thisClass.ifModifiedSinceClientOffset = (new Date()) - paella.opencast.me.timestamp;
+      // #DCE OPC-8, OPC-82, OPC-759 the info/me.json timestamp param is DCE specific!
+      if (paella.opencast._me && paella.opencast._me.timestamp) {
+        thisClass.ifModifiedSinceClientOffset = (new Date()) - paella.opencast._me.timestamp;
       } else {
         thisClass.ifModifiedSinceServerDate = 0;
+        paella.log.debug("TC get all data from beginning of time");
       }
 
       switch (this.config.skin) {
@@ -173,6 +175,7 @@ paella.addPlugin(function () {
       var lastRequestDateStr;
       // use server time
       var currentServerTime = new Date() - thisClass.ifModifiedSinceClientOffset;
+      // Keep track of this request date to set the future ifModifiedSinceDate
       lastRequestDateStr = thisClass.makeISODateString(new Date(currentServerTime));
 
       paella.data.read('timedComments', {
@@ -180,17 +183,20 @@ paella.addPlugin(function () {
         ifModifiedSince: thisClass.ifModifiedSinceDate
       },
       function (data, status) {
+        // Save the query time to prep for next query
+        thisClass.ifModifiedSinceDate = lastRequestDateStr;
+        // Take action with the data
         if (data === 'No change') {
           paella.log.debug("TC No change in data since  " + thisClass.ifModifiedSinceDate);
         } else if (refreshOnly) {
           paella.log.debug("TC Refreshing prints, found " + (data ? data.length: 0));
           thisClass.refreshPrints(data);
         } else {
+          paella.log.debug("TC loadfootPrintData");
           paella.player.videoContainer.masterVideo().getVideoData().then(function (videoData) {
             thisClass.loadfootPrintData(data, status, videoData);
           });
         }
-        thisClass.ifModifiedSinceDate = lastRequestDateStr;
       });
     }
 
