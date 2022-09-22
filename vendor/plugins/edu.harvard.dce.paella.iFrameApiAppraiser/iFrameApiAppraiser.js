@@ -84,7 +84,7 @@ paella.addPlugin(function () {
     getEvents() {
       // Filter out the ones already early bound to avoid duplicate messages
       const nonEarlyBoundEvents = IFrameApiAppraiser.EventsToAppraise.filter(e => {
-        !IFrameApiAppraiser.EventsBoundEarly.includes(e);
+        return !IFrameApiAppraiser.EventsBoundEarly.includes(e);
       });
       // Return events associated to the EventDrivenPlugin API
       paella.log.debug('IFrameApiAppraiser: late binding ' + nonEarlyBoundEvents);
