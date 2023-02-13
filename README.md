@@ -1,6 +1,8 @@
 dce-paella-extensions
 =====================
 
+TODO: Update for Paella 7
+
 This module contains [Harvard DCE](http://www.dce.harvard.edu/)-specific extensions to the [Paella video player](https://github.com/polimediaupv/paella).
 
 It is not a standard Node or browser module (as of now), but rather, a way to package extensions for the build process so that we can avoid forking Paella and maintaining that fork.
